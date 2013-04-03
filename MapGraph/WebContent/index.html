@@ -1,0 +1,381 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+<title>3D visualization Web data statistics</title>
+<script type="text/javascript" src="js/three.js"></script>
+<script type="text/javascript" src="js/constants.js"></script>
+<script type="text/javascript" src="js/Detector.js"></script>
+<script type="text/javascript" src="js/TrackballControls.js"></script>
+<script type="text/javascript" src="js/OrbitControls.js"></script>
+<script type="text/javascript" src="js/stats.min.js"></script>
+<script type="text/javascript"
+	src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwjSVZUk7D3LgeLPHMurDHm5Z-u39IeY0&sensor=false">
+	</script>
+<style>
+#container {
+	background: #333;
+	/*background-image:url(img/clouds.jpg);*/
+}
+</style>
+<script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+
+</head>
+<body>
+	<br />
+	<br />
+	<button id="button">Survey sort by District</button>
+	<div id="result"></div>
+	<div id="container"></div>
+	<!--  Three js Script -->
+	<script type="text/javascript">
+
+	
+//<script type="text/javascript" src="map_files/TrackballControls.js">
+	var BAR_WIDTH=30;
+	var BAR_HEIGHT_MULTIPLE=5
+	var angularSpeed = 0.01; // revolutions per second
+    var lastTime = 0;
+	if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
+	
+	var container, stats;	
+	var camera, controls, scene, renderer;	
+	var group,plane,cube;
+	var texture,image;
+	var strDataURI;// url of map tile
+	//MercatorProjection
+	var proj;
+	//google.maps
+	var G;
+	
+	var zoom = 12;
+	var NWLat,NWLng;
+	//var SELat,SELng;
+	var STATIC_MAP_HEIGHT=512,STATIC_MAP_WIDTH=512;
+	var PLANE_WIDTH=2560,PLANE_HEIGHT=2560;
+	var TILE_MULTIPLE = 5; //5x5
+	var coord = {
+		x :0,
+		y :0
+	}
+	var test_lat = 21.0357;
+	var test_lng = 105.8261;
+	var x_tile = 0;
+	var y_tile =0;
+	var tile_center_lng = 0;
+	var tile_center_lat = 0;
+	var jsonObj;
+	//get map tile, calculate lat, lng of tile
+	init_tiles();
+	//draw map div
+	var centerPoint = new G.LatLng(tile_center_lat,tile_center_lng);
+	//getCorners(centerPoint,zoom,STATIC_MAP_HEIGHT,STATIC_MAP_WIDTH);
+	latLngToCoord(test_lat,test_lng);
+	console.log("cube pos :"+coord.x+":"+coord.y);
+	
+	
+	$(document).ready(function(){
+		<!-- SERVLET CALL -->
+		$("#button").click(function(){				
+			$.ajax({			
+				url:"./StatsGet",
+				type:"GET",
+				dataType:"text",
+			}).success(function(data){
+				console.log("done:"+data);
+				//$("#result").text(data);
+				jsonObj = eval ("(" + data + ")");
+				init();	
+				animate();
+
+			});		
+		});
+	});
+	// Set up the three.js scene. This is the most basic setup without
+	// any special stuff
+	function init() {
+		
+		// set the scene size
+		var WIDTH = 600, HEIGHT = 600;
+
+		// set some camera attributes
+		var VIEW_ANGLE = 45, ASPECT = window.innerWidth / window.innerHeight, NEAR = 1, FAR = 10000;
+
+		// create a WebGL renderer, camera, and a scene
+		renderer = new THREE.WebGLRenderer({clearColor: 0xffffff, clearAlpha: 0.5,antialias:true});
+		renderer.setSize( window.innerWidth, window.innerHeight );
+		var maxAnisotropy = renderer.getMaxAnisotropy();
+		camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
+		scene = new THREE.Scene();
+
+		// add and position the camera at a fixed position
+		  // camera
+       // camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+        camera.position.y = 1300;
+        camera.position.z = 1300;
+		
+        //camera.rotation.x = 45 * (Math.PI / 180);
+		
+		
+		// control
+		controls = new THREE.TrackballControls( camera );
+
+		controls.rotateSpeed = 1.0;
+		controls.zoomSpeed = 1.2;
+		controls.panSpeed = 0.8;
+
+		controls.noRotate = false;
+		controls.noZoom = false;
+		controls.noPan = false;
+		
+		controls.staticMoving = true;
+		controls.dynamicDampingFactor = 0.3;
+
+		controls.keys = [ 65, 83, 68 ];
+		
+		controls.addEventListener( 'change', render );
+		//controls = new THREE.OrbitControls( camera );
+		//controls.autoRotate = true;
+		//controls.rotateSpeed = 1.0;
+		//controls.zoomSpeed = 1.2;
+		//controls.panSpeed = 0.8;
+
+		//controls.noZoom = false;
+		//controls.noPan = false;
+
+		//controls.dynamicDampingFactor = 0.3;
+
+		//controls.keys = [ 65, 83, 68 ];
+
+		controls.addEventListener( 'change', render );
+		// start the renderer, and black background
+		//renderer.setSize(WIDTH, HEIGHT);
+		//renderer.setClearColor(0x000);
+
+		// add the render target to the page
+		//$("#chart").append(renderer.domElement);
+
+		// add subtle ambient lighting
+        var ambientLight = new THREE.AmbientLight(0x555555);
+        scene.add(ambientLight);
+ 
+        // add directional light source
+        var directionalLight = new THREE.DirectionalLight(0xffffff);
+        directionalLight.position.set( 1, 1, 1);
+		directionalLight.target.position.set( 0, 0, 0 );
+		directionalLight.shadowCameraVisible = true;
+		directionalLight.castShadow = true;
+        scene.add(directionalLight);
+		var spotLight = new THREE.SpotLight( 0xffffff,0.3 ); 
+		spotLight.position.set( -250, 250, 100 );  
+		spotLight.castShadow = true;  
+		spotLight.shadowMapWidth = 1024; 
+		spotLight.shadowMapHeight = 1024;  
+		spotLight.shadowCameraNear = 500; 
+		spotLight.shadowCameraFar = 4000; 
+		spotLight.shadowCameraFov = 30; 
+		scene.add( spotLight );
+		//group
+		group = new THREE.Object3D();
+		
+		// plane
+		for ( var i = -(TILE_MULTIPLE-1)/2; i <= (TILE_MULTIPLE-1)/2; i ++ ) {
+			for ( var j = -(TILE_MULTIPLE-1)/2; j <= (TILE_MULTIPLE-1)/2; j ++ ) {
+			
+			
+				//texture
+				//image = document.getElementById("myCanvas");
+
+				//imageContext = image.getContext( '2d' );
+				//imageContext.fillStyle = '#FF0000';
+				//imageContext.fillRect(0,0,150,75);
+
+				texture = new THREE.Texture( image);
+				// material
+				var material = new THREE.MeshLambertMaterial({
+					map: THREE.ImageUtils.loadTexture(getURL(i,j))
+				   //map: texture
+				   , overdraw: true
+				   ,opacity: 0.9
+				   ,transparent: true
+				});
+				console.log(getURL(i,j));
+				plane = new THREE.Mesh(new THREE.PlaneGeometry(STATIC_MAP_WIDTH, STATIC_MAP_HEIGHT, 1, 1), material);		
+				plane.overdraw = true;
+				plane.doubleSided = true;
+				plane.position.z = -j*STATIC_MAP_HEIGHT;
+				plane.position.x = i*STATIC_MAP_WIDTH;
+				plane.rotation.x = -Math.PI/2;
+				plane.material.side = THREE.DoubleSide;
+				group.add(plane);
+			}
+		}
+        scene.add(group);
+		//console.log("plan"+plane.rotation.x+":"+plane.rotation.y+":"+plane.rotation.z);		
+		
+		// Cube
+	
+		for(var index = 0;index<jsonObj.districtStats.length;index++){
+			latLngToCoord(jsonObj.districtStats[index].lat,jsonObj.districtStats[index].lng);
+			var geometry = new THREE.CubeGeometry( BAR_WIDTH, jsonObj.districtStats[index].data*BAR_HEIGHT_MULTIPLE, BAR_WIDTH );
+			for ( var i = 0; i < geometry.faces.length; i ++ ) {
+				geometry.faces[ i ].color.setHex( Math.random() * 0xffffff );
+	
+			}
+	
+			var material = new THREE.MeshBasicMaterial( { vertexColors: THREE.FaceColors } );
+			cube = new THREE.Mesh( geometry, material );
+			cube.position.z = -coord.y;
+			cube.position.x = coord.x;
+			cube.position.y =jsonObj.districtStats[index].data*BAR_HEIGHT_MULTIPLE/2;
+			scene.add( cube );
+		
+		}
+		//Axes
+		//var axes = new THREE.AxisHelper();
+		//axes.scale.set( 100, 100, 100 );
+		//scene.add( axes );
+		// renderer
+
+		//renderer = new THREE.WebGLRenderer( { antialias: false } );
+		//renderer.setClearColor(0x000);
+		//renderer.setSize(WIDTH, HEIGHT);
+		
+
+		container = document.getElementById( 'container' );
+		container.appendChild( renderer.domElement );
+
+		stats = new Stats();
+		stats.domElement.style.position = 'absolute';
+		stats.domElement.style.top = '0px';
+		stats.domElement.style.zIndex = 100;
+		container.appendChild( stats.domElement );
+
+		//
+
+		window.addEventListener( 'resize', onWindowResize, false );
+	}
+
+	function onWindowResize() {
+
+		camera.aspect = window.innerWidth / window.innerHeight;
+		camera.updateProjectionMatrix();
+
+		renderer.setSize( window.innerWidth, window.innerHeight );
+
+		controls.handleResize();
+
+		render();
+
+	}
+	
+	function animate() {
+		requestAnimationFrame( animate );
+		// update
+		
+		var date = new Date();
+		var time = date.getTime();
+		var timeDiff = time - lastTime;
+		var angleChange = angularSpeed * timeDiff * 2 * Math.PI / 1000;
+		//plane.rotation.z += angleChange;
+		//cube.rotation.z += angleChange;
+		
+		lastTime = time;
+		
+		render();
+		update();	
+		
+		
+	}
+	
+	function update(){
+		controls.update();
+		//camera.position.z = Math.max( camera.position.z, 50);
+		stats.update();
+	}
+	
+	function render() {
+		renderer.render( scene, camera );	
+		//console.log(camera.position.x+":"+camera.position.y+":"+camera.position.z);		
+		//console.log("rot"+camera.rotation.x+":"+camera.rotation.y+":"+camera.rotation.z);
+	}
+	function getCorners(center,zoom,mapWidth,mapHeight){
+		var scale = Math.pow(2,zoom);
+		var centerPx = proj.fromLatLngToPoint(center);
+		var SWPoint = {x: (centerPx.x -(mapWidth/2)/ scale) , y: (centerPx.y + (mapHeight/2)/ scale)};
+		SWLatLng = proj.fromPointToLatLng(SWPoint);
+		console.log('SW: ' + SWLatLng);
+		var NEPoint = {x: (centerPx.x +(mapWidth/2)/ scale) , y: (centerPx.y - (mapHeight/2)/ scale)};
+		NELatLng = proj.fromPointToLatLng(NEPoint);
+		console.log(' NE: '+ NELatLng);
+	}
+	
+	//get map tile, calculate lat, lng of tile
+	function init_tiles(){
+		//proj = new MercatorProjection();
+		G = google.maps;
+		// get x y of the tile in selected lat-lng	
+		x_tile = long2tile(test_lng,zoom);
+		y_tile = lat2tile(test_lat,zoom);
+		//get lat - lng of the center of the tile image fetched
+		tile_center_lng = tile2long(x_tile+0.5,zoom); // + 0.5 to return center point , return NW corner by default 
+		tile_center_lat = tile2lat(y_tile+0.5,zoom);
+		NWLng = tile2long(x_tile,zoom);
+		NWLat = tile2lat(y_tile,zoom);
+		//SELat = tile2long(x_tile+1,zoom);
+		//SELng = tile2lat(x_tile+1,zoom);
+		//strDataURI = "http://b.tile.openstreetmap.org/"+zoom+"/"+x_tile+"/"+y_tile+".png";
+		console.log("x_tile :"+long2tile(test_lng,zoom));
+		console.log("y_tile :"+lat2tile(test_lat,zoom));
+		console.log("tile center long:"+tile2long(x_tile+0.5,zoom));
+		console.log("tile center lat :"+tile2lat(y_tile+0.5,zoom));
+		console.log("tile NW long:"+tile2long(x_tile,zoom));
+		console.log("tile NW lat :"+tile2lat(y_tile,zoom));
+		console.log("strDataURI :"+strDataURI);
+		
+	}
+	// GET URL OF TILE
+	function getURL(x_offset,y_offset){
+	var temp_x = x_tile+x_offset;
+	var temp_y = y_tile-y_offset;  // map tile aray count from top left , coord count from left botom
+		// select random server
+		var servers = [
+			"a",
+			"b",
+			"c"
+		];
+		var server = servers[Math.floor(Math.random()*servers.length)];
+		return "http://"+server+".tile.openstreetmap.org/"+zoom+"/"+temp_x+"/"+temp_y+".png";
+	}
+	// draw canvas	
+	// utils function
+	function long2tile(lon,zoom) { 
+		return (Math.floor((lon+180)/360*Math.pow(2,zoom))); 
+	}
+	function lat2tile(lat,zoom)  {
+		return (Math.floor((1-Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180))/Math.PI)/2 *Math.pow(2,zoom))); 
+	}
+	function tile2long(x,z) {
+		return (x/Math.pow(2,z)*360-180);
+	}
+	function tile2lat(y,z) {
+		var n=Math.PI-2*Math.PI*y/Math.pow(2,z);
+		return (180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))));
+	}
+	
+	// convert LatLng to coordination in the scene
+	function latLngToCoord(lat,lng){
+		console.log(' PLANE_HEIGHT: '+ PLANE_HEIGHT);
+		console.log(' PLANE_WIDTH: '+ PLANE_WIDTH);
+		console.log(' centerPoint.lat(): '+ centerPoint.lat());
+		console.log(' centerPoint.lng(): '+ centerPoint.lng());
+		console.log(' NWLat: '+ NWLat);
+		console.log(' NWLng: '+ NWLng);
+		coord.y= (STATIC_MAP_HEIGHT/2)*((lat-centerPoint.lat())/(NWLat-centerPoint.lat()));
+		coord.x= (STATIC_MAP_WIDTH/2)*((lng-centerPoint.lng())/(centerPoint.lng()-NWLng));
+	}
+	
+	
+</script>
+</body>
+</html>
