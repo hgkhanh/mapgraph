@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<!DOCTYPE HTML>
 <html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
@@ -12,19 +12,95 @@
 <script type="text/javascript"
 	src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwjSVZUk7D3LgeLPHMurDHm5Z-u39IeY0&sensor=false">
 	</script>
-<style>
-#container {
-	background: #333;
-	/*background-image:url(img/clouds.jpg);*/
-}
-</style>
-<script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+
+<!-- modern ui lib -->
+<link rel="stylesheet" type="text/css" href="css/modern.css">
+<link href="css/modern-responsive.css" rel="stylesheet">
+<script type="text/javascript" src="./js/jquery-1.9.1.min.js"></script>
+<script type="text/javascript" src="./js/accordion.js"></script>
+<script type="text/javascript" src="js/buttonset.js"></script>
+<script type="text/javascript" src="js/calendar.js"></script>
+<script type="text/javascript" src="js/carousel.js"></script>
+<script type="text/javascript" src="js/dialog.js"></script>
+<script type="text/javascript" src="js/dropdown.js"></script>
+<script type="text/javascript" src="js/input-control.js"></script>
+<script type="text/javascript" src="js/rating.js"></script>
+<script type="text/javascript" src="js/slider.js"></script>
+<script type="text/javascript" src="js/pagecontrol.js"></script>
+<script type="text/javascript" src="js/tile-drag.js"></script>
+<script type="text/javascript" src="js/tile-slider.js"></script>
+<!-- <link rel="stylesheet" type="text/css" href="css/modern-responsive.css"> -->
+<!-- <link rel="stylesheet" type="text/css" href="css/theme-dark.css"> -->
+
 
 </head>
-<body>
-	<br />
-	<br />
-	<button id="button">Survey sort by District</button>
+<body class="metrouicss">
+	<div id="form" class="grid"
+		style="width: 80%; margin: auto;">
+		<input type="submit" value="Submit" id="button" /> <input
+			type="reset" value="Reset" />
+		<!-- <h2>Form</h2> -->
+		<ul class="accordion" data-role="accordion">
+			<li class="active"><a href="#"> Quận/Huyện</a>
+				<div id="district" class="row">
+					<label class="input-control checkbox intermediate" onclick="">
+						<input type="checkbox"> <span class="helper"><b>Chọn
+								tất cả</b></span>
+					</label>
+					<div
+						style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
+						<form>
+							<label class="input-control checkbox" onclick=""> <input
+								type="checkbox"> <span class="helper">Q.Hoàn
+									Kiếm</span>
+							</label><br /> <label class="input-control checkbox" onclick="">
+								<input type="checkbox"> <span class="helper">Q.Ba
+									Đình</span>
+							</label> <br /> <label class="input-control checkbox"> <input
+								type="checkbox"> <span class="helper">Q.Đống Đa</span>
+							</label> <br /> <label class="input-control checkbox"> <input
+								type="checkbox"> <span class="helper">Q.Cầu
+									Giấy</span>
+							</label><br /> <label class="input-control checkbox"> <input
+								type="checkbox"> <span class="helper">Q.Thanh
+									Xuân</span>
+							</label> <br /> <label class="input-control checkbox"> <input
+								type="checkbox"> <span class="helper">Q.Hai Bà
+									Trưng</span>
+							</label><br /> <label class="input-control checkbox"> <input
+								type="checkbox"> <span class="helper">Q.Tây Hồ</span>
+							</label> <br /> <label class="input-control checkbox"> <input
+								type="checkbox"> <span class="helper">Q.Long Biên</span>
+							</label><br /> <label class="input-control checkbox"> <input
+								type="checkbox"> <span class="helper">Q.Long Biên</span>
+							</label> <br /> <label class="input-control checkbox"> <input
+								type="checkbox"> <span class="helper">Q.Hoàng
+									Mai</span>
+							</label> <br /> <label class="input-control checkbox"> <input
+								type="checkbox"> <span class="helper">Q.Hà Đông</span>
+							</label><br /> <label class="input-control checkbox"> <input
+								type="checkbox"> <span class="helper">H.Đông Anh</span>
+							</label> <br /> <label class="input-control checkbox"> <input
+								type="checkbox"> <span class="helper">H.Sóc Sơn</span>
+							</label> <br /> <label class="input-control checkbox"> <input
+								type="checkbox"> <span class="helper">H.Thanh
+									Trì</span>
+							</label> <br /> <label class="input-control checkbox"> <input
+								type="checkbox"> <span class="helper">H.Từ Liêm</span>
+							</label><br /> <label class="input-control checkbox"> <input
+								type="checkbox"> <span class="helper">H.Gia Lâm</span>
+							</label>
+						</form>
+					</div>
+				</div></li>
+			<li class="active"><a href="#"> Caption </a>
+				<div>...content...</div></li>
+			<li><a href="#"> Caption </a>
+				<div>...content...</div></li>
+		</ul>
+		<button>Survey sort by District</button>
+	</div>
+
 	<div id="result"></div>
 	<div id="container"></div>
 	<!--  Three js Script -->
@@ -71,10 +147,9 @@
 	var centerPoint = new G.LatLng(tile_center_lat,tile_center_lng);
 	//getCorners(centerPoint,zoom,STATIC_MAP_HEIGHT,STATIC_MAP_WIDTH);
 	latLngToCoord(test_lat,test_lng);
-	console.log("cube pos :"+coord.x+":"+coord.y);
-	
-	
+	console.log("cube pos :"+coord.x+":"+coord.y);	
 	$(document).ready(function(){
+		$("#container").hide();
 		<!-- SERVLET CALL -->
 		$("#button").click(function(){				
 			$.ajax({			
@@ -88,7 +163,8 @@
 				init();	
 				animate();
 
-			});		
+			});	
+			$("#container").show();
 		});
 	});
 	// Set up the three.js scene. This is the most basic setup without
