@@ -31,9 +31,12 @@ public class StatsGet extends HttpServlet {
 	// "jdbc:mysql://localhost:3306/limesurvey";
 	// private static final String DB_USER = "root";
 	// private static final String DB_PASSWORD = "abc123";
-	private static final String DB_CONNECTION = "jdbc:mysql://sql2.freesqldatabase.com:3306/sql24921";
-	private static final String DB_USER = "sql24921";
-	private static final String DB_PASSWORD = "wR5!bE3*";
+//	private static final String DB_CONNECTION = "jdbc:mysql://sql2.freesqldatabase.com:3306/sql24921";
+//	private static final String DB_USER = "sql24921";
+//	private static final String DB_PASSWORD = "wR5!bE3*";
+	private static final String DB_CONNECTION = "jdbc:mysql://10.10.131.17:3306/mapgraph";
+	private static final String DB_USER = "mapgraph";
+	private static final String DB_PASSWORD = "abc123";
 	private static Connection dbConnection = null;
 	// constants
 	private static final String DISTRICT_TABLE_ID_COL = "district_id";
@@ -71,7 +74,7 @@ public class StatsGet extends HttpServlet {
 		// }
 
 		try {
-			System.out.println("doGet");
+			System.out.println("StatsGet");
 			PrintWriter pwriter = new PrintWriter(response.getOutputStream());
 			System.out.println("queryDistrict");
 			ArrayList<DistrictStatsItem> countDistrict = queryDistrict();
@@ -103,6 +106,7 @@ public class StatsGet extends HttpServlet {
 			pwriter.println(obj);
 			pwriter.flush();
 			dbConnection.close();
+			System.out.println("Resposne: "+obj.toJSONString());
 			System.out.println("dbConnection close");
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());

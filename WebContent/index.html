@@ -35,61 +35,29 @@
 
 </head>
 <body class="metrouicss">
-	<div id="form" class="grid"
-		style="width: 80%; margin: auto;">
+	<div id="form" class="grid" style="width: 80%; margin: auto;">
+
+
 		<input type="submit" value="Submit" id="button" /> <input
 			type="reset" value="Reset" />
 		<!-- <h2>Form</h2> -->
 		<ul class="accordion" data-role="accordion">
 			<li class="active"><a href="#"> Quận/Huyện</a>
 				<div id="district" class="row">
-					<label class="input-control checkbox intermediate" onclick="">
-						<input type="checkbox"> <span class="helper"><b>Chọn
-								tất cả</b></span>
+					<label class="input-control checkbox indeterminate" onclick="">
+						<input type="checkbox" id="dist_all" name="dist" value="dist_all"> <span
+						class="helper"><b>Chọn tất cả</b></span>
 					</label>
 					<div
 						style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
-						<form>
-							<label class="input-control checkbox" onclick=""> <input
-								type="checkbox"> <span class="helper">Q.Hoàn
+						<form id="myForm">
+							<!-- <label class="input-control checkbox" onclick=""> <input
+								type="checkbox" class="dist"> <span class="helper">Q.Hoàn
 									Kiếm</span>
 							</label><br /> <label class="input-control checkbox" onclick="">
-								<input type="checkbox"> <span class="helper">Q.Ba
-									Đình</span>
-							</label> <br /> <label class="input-control checkbox"> <input
-								type="checkbox"> <span class="helper">Q.Đống Đa</span>
-							</label> <br /> <label class="input-control checkbox"> <input
-								type="checkbox"> <span class="helper">Q.Cầu
-									Giấy</span>
-							</label><br /> <label class="input-control checkbox"> <input
-								type="checkbox"> <span class="helper">Q.Thanh
-									Xuân</span>
-							</label> <br /> <label class="input-control checkbox"> <input
-								type="checkbox"> <span class="helper">Q.Hai Bà
-									Trưng</span>
-							</label><br /> <label class="input-control checkbox"> <input
-								type="checkbox"> <span class="helper">Q.Tây Hồ</span>
-							</label> <br /> <label class="input-control checkbox"> <input
-								type="checkbox"> <span class="helper">Q.Long Biên</span>
-							</label><br /> <label class="input-control checkbox"> <input
-								type="checkbox"> <span class="helper">Q.Long Biên</span>
-							</label> <br /> <label class="input-control checkbox"> <input
-								type="checkbox"> <span class="helper">Q.Hoàng
-									Mai</span>
-							</label> <br /> <label class="input-control checkbox"> <input
-								type="checkbox"> <span class="helper">Q.Hà Đông</span>
-							</label><br /> <label class="input-control checkbox"> <input
-								type="checkbox"> <span class="helper">H.Đông Anh</span>
-							</label> <br /> <label class="input-control checkbox"> <input
-								type="checkbox"> <span class="helper">H.Sóc Sơn</span>
-							</label> <br /> <label class="input-control checkbox"> <input
-								type="checkbox"> <span class="helper">H.Thanh
-									Trì</span>
-							</label> <br /> <label class="input-control checkbox"> <input
-								type="checkbox"> <span class="helper">H.Từ Liêm</span>
-							</label><br /> <label class="input-control checkbox"> <input
-								type="checkbox"> <span class="helper">H.Gia Lâm</span>
-							</label>
+								<input type="checkbox" class="dist"> <span
+								class="helper">Q.Ba Đình</span>
+							</label> <br />  -->
 						</form>
 					</div>
 				</div></li>
@@ -98,11 +66,83 @@
 			<li><a href="#"> Caption </a>
 				<div>...content...</div></li>
 		</ul>
-		<button>Survey sort by District</button>
 	</div>
 
 	<div id="result"></div>
 	<div id="container"></div>
+	<!-- form jquery -->
+	<script type="text/javascript">
+	//Get fieldName
+	$(document).ready(function(){
+		<!-- SERVLET CALL -->			
+			$.ajax({			
+				url:"./FieldsGet",
+				type:"GET",
+				dataType:"text",
+			}).success(function(data){
+				console.log("done:"+data);
+				//$("#result").text(data);
+				jsonObj = eval ("(" + data + ")");
+				for(var index = 0;index<jsonObj.fieldNames.length;index++){
+					if(jsonObj.fieldNames[index].type=="1"){
+						var label=$("<label>").attr({class:'input-control checkbox'});
+						var input=$('<input />', { type: 'checkbox', 'name':'dist', value: jsonObj.fieldNames[index].id });
+						var span=$("<span>").attr({class:'helper'});
+						span.append(jsonObj.fieldNames[index].name );
+						input.appendTo(label);
+						span.appendTo(label);
+						label.appendTo(myForm);
+						$("#myForm").append("<br/>");
+					 //$('<label />', { 'class':'input-control checkbox','for':'dist'+jsonObj.fieldNames[index].id, text: jsonObj.fieldNames[index].name }).appendTo(myForm);
+					// $().append();
+					// $('<input />', { type: 'checkbox', 'name':'dist', value: jsonObj.fieldNames[index].id }).appendTo(myForm);
+					  
+					}
+				}
+				
+			});	
+			$("#container").show();
+		
+	});
+	/* $(document).ready(function() {	   
+	        addCheckbox($('#txtName').val());
+	});
+
+	// create Checkbox dynamically
+	function addCheckbox(name) {
+	   var container = $('#cblist');
+	   var inputs = container.find('input');
+	   var id = inputs.length+1;
+
+	   $('<input />', { type: 'checkbox', id: 'cb'+id, value: name }).appendTo(container);
+	   $('<label />', { 'for': 'cb'+id, text: name }).appendTo(container);
+	} */
+	
+	
+	//Check All 
+		$("#dist_all").change(function (){			
+			  if(this.checked) {
+				  console.log("dist_all checked");
+				$("input[type='checkbox']").prop("checked", true);	
+			  }
+			  else{
+				  console.log("dist_all unchecked");
+				  $("input[type='checkbox']").prop("checked", false);
+			  }
+		});
+		$("input[type='checkbox']").change(function(){
+			console.log("check change" + $("input[type='checkbox']:not(:checked)").length);
+			if(!$("input[type='checkbox']:not(:checked)").length){
+				console.log("all checked");
+				$("#dist_all").prop("indeterminate", false);
+			}
+			else{
+				console.log("not all checked");
+				$("#dist_all").prop("indeterminate", true);
+			}
+		}); 
+		
+		</script>
 	<!--  Three js Script -->
 	<script type="text/javascript">
 
