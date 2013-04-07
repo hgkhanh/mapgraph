@@ -28,16 +28,15 @@ public class FieldsGet extends HttpServlet {
 	 * JDBC
 	 */
 	private static final String DB_DRIVER = "com.mysql.jdbc.Driver";
-	// private static final String DB_CONNECTION =
-	// "jdbc:mysql://localhost:3306/limesurvey";
-	// private static final String DB_USER = "root";
-	// private static final String DB_PASSWORD = "abc123";
+	 private static final String DB_CONNECTION ="jdbc:mysql://localhost:3306/mapgraph";
+	 private static final String DB_USER = "root";
+	 private static final String DB_PASSWORD = "abc123";
 //	private static final String DB_CONNECTION = "jdbc:mysql://sql2.freesqldatabase.com:3306/sql24921";
 //	private static final String DB_USER = "sql24921";
 //	private static final String DB_PASSWORD = "wR5!bE3*";
-	private static final String DB_CONNECTION = "jdbc:mysql://10.10.131.17:3306/mapgraph";
-	private static final String DB_USER = "mapgraph";
-	private static final String DB_PASSWORD = "abc123";
+//	private static final String DB_CONNECTION = "jdbc:mysql://10.10.131.17:3306/mapgraph";
+//	private static final String DB_USER = "mapgraph";
+//	private static final String DB_PASSWORD = "abc123";
 	private static Connection dbConnection = null;
 
 	/**

@@ -37,16 +37,16 @@
 <body class="metrouicss">
 	<div id="form" class="grid" style="width: 80%; margin: auto;">
 
-
+		<!-- 
 		<input type="submit" value="Submit" id="button" /> <input
-			type="reset" value="Reset" />
+			type="reset" value="Reset" /> -->
 		<!-- <h2>Form</h2> -->
 		<ul class="accordion" data-role="accordion">
 			<li class="active"><a href="#"> Quận/Huyện</a>
 				<div id="district" class="row">
-					<label class="input-control checkbox indeterminate" onclick="">
-						<input type="checkbox" id="dist_all" name="dist" value="dist_all"> <span
-						class="helper"><b>Chọn tất cả</b></span>
+					<label class="input-control checkbox indeterminate"> <input
+						type="checkbox" id="dist_all" name="dist" value="dist_all">
+						<span class="helper"><b>Chọn tất cả</b></span>
 					</label>
 					<div
 						style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
@@ -72,82 +72,9 @@
 	<div id="container"></div>
 	<!-- form jquery -->
 	<script type="text/javascript">
-	//Get fieldName
-	$(document).ready(function(){
-		<!-- SERVLET CALL -->			
-			$.ajax({			
-				url:"./FieldsGet",
-				type:"GET",
-				dataType:"text",
-			}).success(function(data){
-				console.log("done:"+data);
-				//$("#result").text(data);
-				jsonObj = eval ("(" + data + ")");
-				for(var index = 0;index<jsonObj.fieldNames.length;index++){
-					if(jsonObj.fieldNames[index].type=="1"){
-						var label=$("<label>").attr({class:'input-control checkbox'});
-						var input=$('<input />', { type: 'checkbox', 'name':'dist', value: jsonObj.fieldNames[index].id });
-						var span=$("<span>").attr({class:'helper'});
-						span.append(jsonObj.fieldNames[index].name );
-						input.appendTo(label);
-						span.appendTo(label);
-						label.appendTo(myForm);
-						$("#myForm").append("<br/>");
-					 //$('<label />', { 'class':'input-control checkbox','for':'dist'+jsonObj.fieldNames[index].id, text: jsonObj.fieldNames[index].name }).appendTo(myForm);
-					// $().append();
-					// $('<input />', { type: 'checkbox', 'name':'dist', value: jsonObj.fieldNames[index].id }).appendTo(myForm);
-					  
-					}
-				}
-				
-			});	
-			$("#container").show();
-		
-	});
-	/* $(document).ready(function() {	   
-	        addCheckbox($('#txtName').val());
-	});
-
-	// create Checkbox dynamically
-	function addCheckbox(name) {
-	   var container = $('#cblist');
-	   var inputs = container.find('input');
-	   var id = inputs.length+1;
-
-	   $('<input />', { type: 'checkbox', id: 'cb'+id, value: name }).appendTo(container);
-	   $('<label />', { 'for': 'cb'+id, text: name }).appendTo(container);
-	} */
-	
-	
-	//Check All 
-		$("#dist_all").change(function (){			
-			  if(this.checked) {
-				  console.log("dist_all checked");
-				$("input[type='checkbox']").prop("checked", true);	
-			  }
-			  else{
-				  console.log("dist_all unchecked");
-				  $("input[type='checkbox']").prop("checked", false);
-			  }
-		});
-		$("input[type='checkbox']").change(function(){
-			console.log("check change" + $("input[type='checkbox']:not(:checked)").length);
-			if(!$("input[type='checkbox']:not(:checked)").length){
-				console.log("all checked");
-				$("#dist_all").prop("indeterminate", false);
-			}
-			else{
-				console.log("not all checked");
-				$("#dist_all").prop("indeterminate", true);
-			}
-		}); 
-		
-		</script>
-	<!--  Three js Script -->
-	<script type="text/javascript">
-
-	
-//<script type="text/javascript" src="map_files/TrackballControls.js">
+	// field showed var
+	var district_cb
+	//init var
 	var BAR_WIDTH=30;
 	var BAR_HEIGHT_MULTIPLE=5
 	var angularSpeed = 0.01; // revolutions per second
@@ -156,7 +83,8 @@
 	
 	var container, stats;	
 	var camera, controls, scene, renderer;	
-	var group,plane,cube;
+	var group_plane,plane;
+	var group_cube=[];
 	var texture,image;
 	var strDataURI;// url of map tile
 	//MercatorProjection
@@ -188,9 +116,75 @@
 	//getCorners(centerPoint,zoom,STATIC_MAP_HEIGHT,STATIC_MAP_WIDTH);
 	latLngToCoord(test_lat,test_lng);
 	console.log("cube pos :"+coord.x+":"+coord.y);	
+	//Get fieldName
 	$(document).ready(function(){
-		$("#container").hide();
-		<!-- SERVLET CALL -->
+		<!-- SERVLET CALL -->				
+			
+			//Check All checkbox
+			$("#dist_all").change(function (){			
+				  if(this.checked) {
+					  console.log("dist_all checked");
+					$("input[type='checkbox']").prop("checked", true);	
+				  }
+				  else{
+					  console.log("dist_all unchecked");
+					  $("input[type='checkbox']").prop("checked", false);
+				  }
+			});
+			
+			$.ajax({			
+				url:"./StatsGet",
+				type:"GET",
+				dataType:"text",
+			}).success(function(data){
+				console.log("done:"+data);
+				//$("#result").text(data);
+				jsonObj = eval ("(" + data + ")");
+				for(var index = 0;index<jsonObj.fieldNames.length;index++){
+					if(jsonObj.fieldNames[index].type=="1"){
+						var label=$("<label>").attr({class:'input-control checkbox'});
+						var input=$("<input>");
+						input.attr({ type: 'checkbox', 'name':'dist', value: jsonObj.fieldNames[index].id });
+						var span=$("<span>").attr({class:'helper'});
+						span.append(jsonObj.fieldNames[index].name );
+						input.appendTo(label);
+						span.appendTo(label);
+						label.appendTo(myForm);
+						$("#myForm").append("<br/>");					
+					}
+				}
+				$("input[type='checkbox']").prop('checked',true);
+				init();	
+				graph();
+				animate();
+				
+				
+				$("input[type='checkbox']").change(function(){
+					//console.log("check change" + $("input[type='checkbox']:not(:checked)").length);
+					
+					if($("input[type='checkbox']:not(:checked)").length==1){
+						//console.log("1 unchecked");
+						if($("#dist_all").is(":not(:checked)")){
+							
+							//console.log("and thats dist_all-> check dist_all now");
+							$("#dist_all").prop('checked', true);
+						}
+						else{
+							console.log("uncheck idst_all now");
+							$("#dist_all").prop('checked', false);
+						}
+					}
+					//draw mapgraph
+					graph();
+					
+				}); 
+			});	
+	});
+	<!--  Three js Script -->
+
+	/*  SERVLET CALL 
+	$(document).ready(function(){
+		
 		$("#button").click(function(){				
 			$.ajax({			
 				url:"./StatsGet",
@@ -204,9 +198,8 @@
 				animate();
 
 			});	
-			$("#container").show();
 		});
-	});
+	}); */
 	// Set up the three.js scene. This is the most basic setup without
 	// any special stuff
 	function init() {
@@ -292,7 +285,7 @@
 		spotLight.shadowCameraFov = 30; 
 		scene.add( spotLight );
 		//group
-		group = new THREE.Object3D();
+		group_plane = new THREE.Object3D();
 		
 		// plane
 		for ( var i = -(TILE_MULTIPLE-1)/2; i <= (TILE_MULTIPLE-1)/2; i ++ ) {
@@ -315,7 +308,7 @@
 				   ,opacity: 0.9
 				   ,transparent: true
 				});
-				console.log(getURL(i,j));
+				//console.log(getURL(i,j));
 				plane = new THREE.Mesh(new THREE.PlaneGeometry(STATIC_MAP_WIDTH, STATIC_MAP_HEIGHT, 1, 1), material);		
 				plane.overdraw = true;
 				plane.doubleSided = true;
@@ -323,30 +316,13 @@
 				plane.position.x = i*STATIC_MAP_WIDTH;
 				plane.rotation.x = -Math.PI/2;
 				plane.material.side = THREE.DoubleSide;
-				group.add(plane);
+				group_plane.add(plane);
 			}
 		}
-        scene.add(group);
+        scene.add(group_plane);
 		//console.log("plan"+plane.rotation.x+":"+plane.rotation.y+":"+plane.rotation.z);		
 		
-		// Cube
-	
-		for(var index = 0;index<jsonObj.districtStats.length;index++){
-			latLngToCoord(jsonObj.districtStats[index].lat,jsonObj.districtStats[index].lng);
-			var geometry = new THREE.CubeGeometry( BAR_WIDTH, jsonObj.districtStats[index].data*BAR_HEIGHT_MULTIPLE, BAR_WIDTH );
-			for ( var i = 0; i < geometry.faces.length; i ++ ) {
-				geometry.faces[ i ].color.setHex( Math.random() * 0xffffff );
-	
-			}
-	
-			var material = new THREE.MeshBasicMaterial( { vertexColors: THREE.FaceColors } );
-			cube = new THREE.Mesh( geometry, material );
-			cube.position.z = -coord.y;
-			cube.position.x = coord.x;
-			cube.position.y =jsonObj.districtStats[index].data*BAR_HEIGHT_MULTIPLE/2;
-			scene.add( cube );
 		
-		}
 		//Axes
 		//var axes = new THREE.AxisHelper();
 		//axes.scale.set( 100, 100, 100 );
@@ -384,7 +360,38 @@
 		render();
 
 	}
+	function graph(){
+		// Cube
+		for (var i=0;i<group_cube.length;i++){
+			scene.remove(group_cube[i]);
+		}
+		group_cube=[];
 	
+		for(var index = 0;index<jsonObj.districtStats.length;index++){
+			//remove old cube
+		
+			//draw cube /bar graph
+			//console.log("district_id:"+jsonObj.districtStats[index].district_id);
+			//console.log("checkbox is:"+$("input[type='checkbox'][value="+jsonObj.districtStats[index].district_id+"]").is(':checked'));
+			if($("input[type='checkbox'][value="+jsonObj.districtStats[index].district_id+"]").is(':checked')){
+				latLngToCoord(jsonObj.districtStats[index].lat,jsonObj.districtStats[index].lng);
+				var geometry = new THREE.CubeGeometry( BAR_WIDTH, jsonObj.districtStats[index].data*BAR_HEIGHT_MULTIPLE, BAR_WIDTH );
+				for ( var i = 0; i < geometry.faces.length; i ++ ) {
+					geometry.faces[ i ].color.setHex( Math.random() * 0xffffff );
+		
+				}
+		
+				var material = new THREE.MeshBasicMaterial( { vertexColors: THREE.FaceColors } );
+				var cube = new THREE.Mesh( geometry, material );
+				cube.position.z = -coord.y;
+				cube.position.x = coord.x;
+				cube.position.y =jsonObj.districtStats[index].data*BAR_HEIGHT_MULTIPLE/2;
+				group_cube.push( cube );
+				scene.add(cube);
+			}
+		}
+		
+	}
 	function animate() {
 		requestAnimationFrame( animate );
 		// update
@@ -420,10 +427,10 @@
 		var centerPx = proj.fromLatLngToPoint(center);
 		var SWPoint = {x: (centerPx.x -(mapWidth/2)/ scale) , y: (centerPx.y + (mapHeight/2)/ scale)};
 		SWLatLng = proj.fromPointToLatLng(SWPoint);
-		console.log('SW: ' + SWLatLng);
+		//console.log('SW: ' + SWLatLng);
 		var NEPoint = {x: (centerPx.x +(mapWidth/2)/ scale) , y: (centerPx.y - (mapHeight/2)/ scale)};
 		NELatLng = proj.fromPointToLatLng(NEPoint);
-		console.log(' NE: '+ NELatLng);
+		//console.log(' NE: '+ NELatLng);
 	}
 	
 	//get map tile, calculate lat, lng of tile
@@ -441,13 +448,13 @@
 		//SELat = tile2long(x_tile+1,zoom);
 		//SELng = tile2lat(x_tile+1,zoom);
 		//strDataURI = "http://b.tile.openstreetmap.org/"+zoom+"/"+x_tile+"/"+y_tile+".png";
-		console.log("x_tile :"+long2tile(test_lng,zoom));
-		console.log("y_tile :"+lat2tile(test_lat,zoom));
-		console.log("tile center long:"+tile2long(x_tile+0.5,zoom));
-		console.log("tile center lat :"+tile2lat(y_tile+0.5,zoom));
-		console.log("tile NW long:"+tile2long(x_tile,zoom));
-		console.log("tile NW lat :"+tile2lat(y_tile,zoom));
-		console.log("strDataURI :"+strDataURI);
+		//console.log("x_tile :"+long2tile(test_lng,zoom));
+		//console.log("y_tile :"+lat2tile(test_lat,zoom));
+		//console.log("tile center long:"+tile2long(x_tile+0.5,zoom));
+		//console.log("tile center lat :"+tile2lat(y_tile+0.5,zoom));
+		//console.log("tile NW long:"+tile2long(x_tile,zoom));
+		//console.log("tile NW lat :"+tile2lat(y_tile,zoom));
+		//console.log("strDataURI :"+strDataURI);
 		
 	}
 	// GET URL OF TILE
@@ -481,12 +488,12 @@
 	
 	// convert LatLng to coordination in the scene
 	function latLngToCoord(lat,lng){
-		console.log(' PLANE_HEIGHT: '+ PLANE_HEIGHT);
-		console.log(' PLANE_WIDTH: '+ PLANE_WIDTH);
-		console.log(' centerPoint.lat(): '+ centerPoint.lat());
-		console.log(' centerPoint.lng(): '+ centerPoint.lng());
-		console.log(' NWLat: '+ NWLat);
-		console.log(' NWLng: '+ NWLng);
+		//console.log(' PLANE_HEIGHT: '+ PLANE_HEIGHT);
+		//console.log(' PLANE_WIDTH: '+ PLANE_WIDTH);
+		//console.log(' centerPoint.lat(): '+ centerPoint.lat());
+		//console.log(' centerPoint.lng(): '+ centerPoint.lng());
+		//console.log(' NWLat: '+ NWLat);
+		//console.log(' NWLng: '+ NWLng);
 		coord.y= (STATIC_MAP_HEIGHT/2)*((lat-centerPoint.lat())/(NWLat-centerPoint.lat()));
 		coord.x= (STATIC_MAP_WIDTH/2)*((lng-centerPoint.lng())/(centerPoint.lng()-NWLng));
 	}

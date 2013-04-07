@@ -27,21 +27,23 @@ public class StatsGet extends HttpServlet {
 	 * JDBC
 	 */
 	private static final String DB_DRIVER = "com.mysql.jdbc.Driver";
+	private static final String DB_CONNECTION = "jdbc:mysql://localhost:3306/mapgraph";
+	private static final String DB_USER = "root";
+	private static final String DB_PASSWORD = "";
 	// private static final String DB_CONNECTION =
-	// "jdbc:mysql://localhost:3306/limesurvey";
-	// private static final String DB_USER = "root";
+	// "jdbc:mysql://sql2.freesqldatabase.com:3306/sql24921";
+	// private static final String DB_USER = "sql24921";
+	// private static final String DB_PASSWORD = "wR5!bE3*";
+	// private static final String DB_CONNECTION
+	// ="jdbc:mysqxl://10.10.131.17:3306/mapgraph";
+	// private static final String DB_USER = "mapgraph";
 	// private static final String DB_PASSWORD = "abc123";
-//	private static final String DB_CONNECTION = "jdbc:mysql://sql2.freesqldatabase.com:3306/sql24921";
-//	private static final String DB_USER = "sql24921";
-//	private static final String DB_PASSWORD = "wR5!bE3*";
-	private static final String DB_CONNECTION = "jdbc:mysql://10.10.131.17:3306/mapgraph";
-	private static final String DB_USER = "mapgraph";
-	private static final String DB_PASSWORD = "abc123";
 	private static Connection dbConnection = null;
+
 	// constants
-	private static final String DISTRICT_TABLE_ID_COL = "district_id";
-	private static final String DISTRICT_TABLE_LAT_COL = "latitude";
-	private static final String DISTRICT_TABLE_LNG_COL = "longitude";
+	// private static final String DISTRICT_TABLE_ID_COL = "district_id";
+	// private static final String DISTRICT_TABLE_LAT_COL = "latitude";
+	// private static final String DISTRICT_TABLE_LNG_COL = "longitude";
 
 	/**
 	 * @see HttpServlet#HttpServlet()
@@ -75,29 +77,23 @@ public class StatsGet extends HttpServlet {
 
 		try {
 			System.out.println("StatsGet");
+			dbConnection = getDBConnection();
 			PrintWriter pwriter = new PrintWriter(response.getOutputStream());
-			System.out.println("queryDistrict");
-			ArrayList<DistrictStatsItem> countDistrict = queryDistrict();
 			JSONObject obj = new JSONObject();
 			JSONArray jsonArray = new JSONArray();
-			/*
-			 * // query District info System.out.println("query Dist info");
-			 * PreparedStatement getDtrInfoStatement = null; String
-			 * getDtrInfoSQL = "SELECT * FROM district"; getDtrInfoStatement =
-			 * dbConnection.prepareStatement(getDtrInfoSQL); ResultSet rs =
-			 * getDtrInfoStatement.executeQuery(); //
-			 * getDtrInfoStatement.setInt(1, i + 1); while (rs.next()) {
-			 * System.out.println(rs.getInt(DISTRICT_TABLE_ID_COL)); for (int i
-			 * = 0; i < countDistrict.size(); i++) {
-			 * if(rs.getInt(DISTRICT_TABLE_ID_COL
-			 * )==countDistrict.get(i).getDistrict_id()){
-			 * countDistrict.get(i).setLat(
-			 * rs.getString(DISTRICT_TABLE_LAT_COL));
-			 * countDistrict.get(i).setLng(
-			 * rs.getString(DISTRICT_TABLE_LNG_COL)); // attach info with count
-			 * 
-			 * } } } System.out.println("query Dist info done");
-			 */
+			// query field name
+			ArrayList<FieldName> fieldName = queryFieldName();
+			for (int i = 0; i < fieldName.size(); i++) {
+				jsonArray.add(fieldName.get(i));
+			}
+
+			obj.put("fieldNames", jsonArray);
+
+			// Query data
+			System.out.println("queryDistrict");
+			jsonArray = new JSONArray();
+			ArrayList<DistrictStatsItem> countDistrict = queryDistrict();
+
 			for (int i = 0; i < countDistrict.size(); i++) {
 				jsonArray.add(countDistrict.get(i));
 			}
@@ -106,12 +102,50 @@ public class StatsGet extends HttpServlet {
 			pwriter.println(obj);
 			pwriter.flush();
 			dbConnection.close();
-			System.out.println("Resposne: "+obj.toJSONString());
+			System.out.println("Resposne: " + obj.toJSONString());
 			System.out.println("dbConnection close");
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
 		}
 
+	}
+
+	private static ArrayList<FieldName> queryFieldName() throws SQLException {
+		ArrayList<FieldName> results = new ArrayList<FieldName>();
+		PreparedStatement preparedStatement = null;
+		String selectDistrict = "SELECT * FROM district WHERE latitude IS NOT NULL";
+		String selectCategory = "SELECT * FROM category";
+		try {
+			dbConnection = getDBConnection();
+			System.out.println("query District Name");
+			// selectDistrict SQL stetement
+			preparedStatement = dbConnection.prepareStatement(selectDistrict);
+			ResultSet rs = preparedStatement.executeQuery();
+			while (rs.next()) {
+				FieldName mFieldName = new FieldName(FieldName.DISTRICT_TYPE,
+						rs.getString("district_id"), rs.getString("name"));
+				results.add(mFieldName);
+			}
+			System.out.println("query Category Name");
+			// selectCategory SQL statement
+			preparedStatement = dbConnection.prepareStatement(selectCategory);
+			rs = preparedStatement.executeQuery();
+			while (rs.next()) {
+				FieldName mFieldName = new FieldName(FieldName.CATEGORY_TYPE,
+						rs.getString("category_id"), rs.getString("name"));
+				results.add(mFieldName);
+			}
+		} catch (SQLException e) {
+
+			System.out.println(e.getMessage());
+
+		} finally {
+
+			if (preparedStatement != null) {
+				preparedStatement.close();
+			}
+		}
+		return results;
 	}
 
 	/**
@@ -128,11 +162,9 @@ public class StatsGet extends HttpServlet {
 		ArrayList<DistrictStatsItem> countResult = new ArrayList<DistrictStatsItem>();
 		PreparedStatement countDistrictStatement = null;
 
-		String countDistrictSQL = "SELECT 863796X1X6,latitude,longitude,COUNT(863796X1X6)  AS total_survey FROM lime_survey_863796  JOIN district ON district.district_id=lime_survey_863796.863796X1X6 GROUP BY 863796X1X6 ;";
+		String countDistrictSQL = "SELECT 863796X1X6,latitude,longitude,COUNT(863796X1X6)  AS total_survey FROM xlime_survey_863796  JOIN district ON district.district_id=xlime_survey_863796.863796X1X6 GROUP BY 863796X1X6 ;";
 
-		try {
-			System.out.println("queryDistrict DB connecting...");
-			dbConnection = getDBConnection();
+		try {		
 			System.out.println("queryDistrict querying...");
 			countDistrictStatement = dbConnection
 					.prepareStatement(countDistrictSQL);
@@ -163,7 +195,6 @@ public class StatsGet extends HttpServlet {
 		String selectDistrict = "SELECT * FROM DISTRICT WHERE DISTRICT_ID = ?";
 		String selectCategory = "SELECT * FROM CATEGORY WHERE CATEGORY_ID = ?";
 		try {
-			dbConnection = getDBConnection();
 			System.out.println("queryName getDBConnection");
 			// selectDistrict SQL stetement
 			preparedStatement = dbConnection.prepareStatement(selectDistrict);
@@ -198,6 +229,7 @@ public class StatsGet extends HttpServlet {
 	}
 
 	private static Connection getDBConnection() {
+		System.out.println("DB connecting...");
 		Connection dbConnection = null;
 
 		try {
@@ -205,6 +237,7 @@ public class StatsGet extends HttpServlet {
 			Class.forName(DB_DRIVER);
 			dbConnection = DriverManager.getConnection(DB_CONNECTION, DB_USER,
 					DB_PASSWORD);
+			System.out.println("DB connected!");
 			return dbConnection;
 
 		} catch (ClassNotFoundException e) {
@@ -215,7 +248,7 @@ public class StatsGet extends HttpServlet {
 			System.out.println(e.getMessage());
 
 		}
-
+		System.out.println("DB connected!");
 		return dbConnection;
 
 	}
