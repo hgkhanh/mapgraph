@@ -14,7 +14,6 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.json.simple.JSONArray;
-import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 
 /**
@@ -27,17 +26,16 @@ public class StatsGet extends HttpServlet {
 	 * JDBC
 	 */
 	private static final String DB_DRIVER = "com.mysql.jdbc.Driver";
-	private static final String DB_CONNECTION = "jdbc:mysql://localhost:3306/mapgraph";
-	private static final String DB_USER = "root";
-	private static final String DB_PASSWORD = "";
+	 private static final String DB_CONNECTION =	 "jdbc:mysql://localhost:3306/mapgraph";
+	 private static final String DB_USER = "root";
+	 private static final String DB_PASSWORD = "";
 	// private static final String DB_CONNECTION =
 	// "jdbc:mysql://sql2.freesqldatabase.com:3306/sql24921";
 	// private static final String DB_USER = "sql24921";
 	// private static final String DB_PASSWORD = "wR5!bE3*";
-	// private static final String DB_CONNECTION
-	// ="jdbc:mysqxl://10.10.131.17:3306/mapgraph";
-	// private static final String DB_USER = "mapgraph";
-	// private static final String DB_PASSWORD = "abc123";
+//	private static final String DB_CONNECTION = "jdbc:mysql://10.10.131.17:3306/mapgraph";
+//	private static final String DB_USER = "mapgraph";
+//	private static final String DB_PASSWORD = "abc123";
 	private static Connection dbConnection = null;
 
 	// constants
@@ -89,16 +87,22 @@ public class StatsGet extends HttpServlet {
 
 			obj.put("fieldNames", jsonArray);
 
-			// Query data
+			// Query survey count by district
 			System.out.println("queryDistrict");
 			jsonArray = new JSONArray();
 			ArrayList<DistrictStatsItem> countDistrict = queryDistrict();
-
 			for (int i = 0; i < countDistrict.size(); i++) {
 				jsonArray.add(countDistrict.get(i));
 			}
-
 			obj.put("districtStats", jsonArray);
+			// Query datatype stats 
+			System.out.println("queryDataTypeStats");
+			jsonArray = new JSONArray();
+			ArrayList<DistrictStatsItem> resultDataTypeStats = queryDataTypeStats();
+			for (int i = 0; i < resultDataTypeStats.size(); i++) {
+				jsonArray.add(resultDataTypeStats.get(i));
+			}
+			obj.put("dataTypeStats", jsonArray);
 			pwriter.println(obj);
 			pwriter.flush();
 			dbConnection.close();
@@ -110,11 +114,52 @@ public class StatsGet extends HttpServlet {
 
 	}
 
+	private static ArrayList<DistrictStatsItem> queryDataTypeStats()
+			throws SQLException {
+		ArrayList<DistrictStatsItem> results = new ArrayList<DistrictStatsItem>();
+		PreparedStatement preparedStatement = null;
+		String selectDatatypeStats = "SELECT answer.district_living_id,district.latitude," +
+				"district.longitude,answer_datatype_time.datatype_id," +
+				"answer_datatype_time.time_id,count(*) as total_survey " +
+				"FROM answer_datatype_time JOIN answer " +
+				"ON answer.answer_id=answer_datatype_time.answer_id JOIN district " +
+				"ON answer.district_living_id=district.district_id " +
+				"WHERE district.latitude IS NOT NULL " +
+				"GROUP BY answer.district_living_id,answer_datatype_time.datatype_id," +
+				"answer_datatype_time.time_id;";
+		try {
+			dbConnection = getDBConnection();
+			System.out.println("query datatype stats");
+			preparedStatement = dbConnection
+					.prepareStatement(selectDatatypeStats);
+			ResultSet rs = preparedStatement.executeQuery();
+			while (rs.next()) {
+				results.add(new DistrictStatsItem("datatype_stats", rs
+						.getInt("district_living_id"), rs
+						.getInt("total_survey"), rs.getInt("datatype_id"), rs
+						.getInt("time_id"), rs.getString("latitude"), rs
+						.getString("longitude")));
+			}
+			System.out.println("\nqueryDataTypeStats done");
+			return results;
+
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		} finally {
+			if (preparedStatement != null) {
+				preparedStatement.close();
+			}
+		}
+		return results;
+	}
+
 	private static ArrayList<FieldName> queryFieldName() throws SQLException {
 		ArrayList<FieldName> results = new ArrayList<FieldName>();
 		PreparedStatement preparedStatement = null;
 		String selectDistrict = "SELECT * FROM district WHERE latitude IS NOT NULL";
 		String selectCategory = "SELECT * FROM category";
+		String selectDatatype = "SELECT * FROM datatype";
+		String selectTime = "SELECT * FROM time";
 		try {
 			dbConnection = getDBConnection();
 			System.out.println("query District Name");
@@ -133,6 +178,24 @@ public class StatsGet extends HttpServlet {
 			while (rs.next()) {
 				FieldName mFieldName = new FieldName(FieldName.CATEGORY_TYPE,
 						rs.getString("category_id"), rs.getString("name"));
+				results.add(mFieldName);
+			}
+			System.out.println("query datatye Name");
+			// selectDatatype SQL statement
+			preparedStatement = dbConnection.prepareStatement(selectDatatype);
+			rs = preparedStatement.executeQuery();
+			while (rs.next()) {
+				FieldName mFieldName = new FieldName(FieldName.DATA_TYPE,
+						rs.getString("datatype_id"), rs.getString("name"));
+				results.add(mFieldName);
+			}
+			// selectTime SQL statement
+			preparedStatement = dbConnection.prepareStatement(selectTime);
+			rs = preparedStatement.executeQuery();
+			while (rs.next()) {
+				FieldName mFieldName = new FieldName(FieldName.TIME_TYPE,
+						rs.getString("time_id"), rs.getString("from") + "-"
+								+ rs.getString("to") + "h");
 				results.add(mFieldName);
 			}
 		} catch (SQLException e) {
@@ -154,7 +217,7 @@ public class StatsGet extends HttpServlet {
 	 */
 	protected void doPost(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
+
 	}
 
 	private static ArrayList<DistrictStatsItem> queryDistrict()
@@ -162,18 +225,21 @@ public class StatsGet extends HttpServlet {
 		ArrayList<DistrictStatsItem> countResult = new ArrayList<DistrictStatsItem>();
 		PreparedStatement countDistrictStatement = null;
 
-		String countDistrictSQL = "SELECT 863796X1X6,latitude,longitude,COUNT(863796X1X6)  AS total_survey FROM xlime_survey_863796  JOIN district ON district.district_id=xlime_survey_863796.863796X1X6 GROUP BY 863796X1X6 ;";
+		String countDistrictSQL = "SELECT district_living_id,latitude,longitude,COUNT(district_living_id)  AS total_survey "
+				+ "FROM answer  JOIN district ON district.district_id=answer.district_living_id GROUP BY district_living_id ;";
 
-		try {		
+		try {
 			System.out.println("queryDistrict querying...");
 			countDistrictStatement = dbConnection
 					.prepareStatement(countDistrictSQL);
 			ResultSet rs = countDistrictStatement.executeQuery();
 			while (rs.next()) {
-				System.out.print(rs.getInt("863796X1X6") + ":"
+				System.out.print(rs.getInt("district_living_id") + ":"
 						+ rs.getInt("total_survey") + " ");
-				countResult.add(new DistrictStatsItem(rs.getInt("863796X1X6"),
-						rs.getInt("total_survey"), rs.getString("latitude"), rs
+				countResult.add(new DistrictStatsItem("district_total_survey",
+						rs.getInt("district_living_id"), rs
+								.getInt("total_survey"), rs
+								.getString("latitude"), rs
 								.getString("longitude")));
 			}
 			System.out.println("\nqueryDistrict done");

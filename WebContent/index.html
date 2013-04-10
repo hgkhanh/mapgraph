@@ -1,504 +1,721 @@
 <!DOCTYPE HTML>
 <html>
-<head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<title>3D visualization Web data statistics</title>
-<script type="text/javascript" src="js/three.js"></script>
-<script type="text/javascript" src="js/constants.js"></script>
-<script type="text/javascript" src="js/Detector.js"></script>
-<script type="text/javascript" src="js/TrackballControls.js"></script>
-<script type="text/javascript" src="js/OrbitControls.js"></script>
-<script type="text/javascript" src="js/stats.min.js"></script>
-<script type="text/javascript"
-	src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwjSVZUk7D3LgeLPHMurDHm5Z-u39IeY0&sensor=false">
-	</script>
+    
+    <head>
+        <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <title>3D visualization Web data statistics</title>
+        <script type="text/javascript" src="js/three.js"></script>
+        <script type="text/javascript" src="js/constants.js"></script>
+        <script type="text/javascript" src="js/Detector.js"></script>
+        <script type="text/javascript" src="js/TrackballControls.js"></script>
+        <script type="text/javascript" src="js/OrbitControls.js"></script>
+        <script type="text/javascript" src="js/stats.min.js"></script>
+        <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwjSVZUk7D3LgeLPHMurDHm5Z-u39IeY0&sensor=false">
+            
+        </script>
+        <script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
+        <!-- modern ui lib -->
+        <link rel="stylesheet" type="text/css" href="css/modern.css">
+        <link href="css/modern-responsive.css" rel="stylesheet">
+        <script type="text/javascript" src="./js/jquery-1.9.1.min.js"></script>
+        <script type="text/javascript" src="./js/accordion.js"></script>
+        <script type="text/javascript" src="js/buttonset.js"></script>
+        <script type="text/javascript" src="js/calendar.js"></script>
+        <script type="text/javascript" src="js/carousel.js"></script>
+        <script type="text/javascript" src="js/dialog.js"></script>
+        <script type="text/javascript" src="js/dropdown.js"></script>
+        <script type="text/javascript" src="js/input-control.js"></script>
+        <script type="text/javascript" src="js/rating.js"></script>
+        <script type="text/javascript" src="js/slider.js"></script>
+        <script type="text/javascript" src="js/pagecontrol.js"></script>
+        <script type="text/javascript" src="js/tile-drag.js"></script>
+        <script type="text/javascript" src="js/tile-slider.js"></script>
+        <!-- <link rel="stylesheet" type="text/css" href="css/modern-responsive.css"> -->
+        <!-- <link rel="stylesheet" type="text/css" href="css/theme-dark.css"> -->
+    </head>
+    
+    <body class="metrouicss" style="zoom: 1;">
+        <div id="form" style="width: 40%; margin: auto; float: left">
+            <!-- <input type="submit" value="Submit" id="button" />
+            <input type="reset" value="Reset" />-->
+            <!-- <h2>Form</h2> -->
+            <ul class="accordion" data-role="accordion">
+                <li class="active"><a href="#"> Quận/Huyện</a>
 
-<!-- modern ui lib -->
-<link rel="stylesheet" type="text/css" href="css/modern.css">
-<link href="css/modern-responsive.css" rel="stylesheet">
-<script type="text/javascript" src="./js/jquery-1.9.1.min.js"></script>
-<script type="text/javascript" src="./js/accordion.js"></script>
-<script type="text/javascript" src="js/buttonset.js"></script>
-<script type="text/javascript" src="js/calendar.js"></script>
-<script type="text/javascript" src="js/carousel.js"></script>
-<script type="text/javascript" src="js/dialog.js"></script>
-<script type="text/javascript" src="js/dropdown.js"></script>
-<script type="text/javascript" src="js/input-control.js"></script>
-<script type="text/javascript" src="js/rating.js"></script>
-<script type="text/javascript" src="js/slider.js"></script>
-<script type="text/javascript" src="js/pagecontrol.js"></script>
-<script type="text/javascript" src="js/tile-drag.js"></script>
-<script type="text/javascript" src="js/tile-slider.js"></script>
-<!-- <link rel="stylesheet" type="text/css" href="css/modern-responsive.css"> -->
-<!-- <link rel="stylesheet" type="text/css" href="css/theme-dark.css"> -->
+                    <div id="district" class="row">
+                        <label class="input-control checkbox indeterminate">
+                            <input type="checkbox" id="dist_all" name="dist" value="dist_all">	<span class="helper"><b>Chọn tất cả</b></span>
 
+                        </label>
+                        <div style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
+                            <form id="distForm"></form>	<a class="button default" onClick="drawDistGraph()">View</a>
 
-</head>
-<body class="metrouicss">
-	<div id="form" class="grid" style="width: 80%; margin: auto;">
+                        </div>
+                    </div>
+                </li>
+                <li><a href="#"> Thống kê sử dụng </a>
 
-		<!-- 
-		<input type="submit" value="Submit" id="button" /> <input
-			type="reset" value="Reset" /> -->
-		<!-- <h2>Form</h2> -->
-		<ul class="accordion" data-role="accordion">
-			<li class="active"><a href="#"> Quận/Huyện</a>
-				<div id="district" class="row">
-					<label class="input-control checkbox indeterminate"> <input
-						type="checkbox" id="dist_all" name="dist" value="dist_all">
-						<span class="helper"><b>Chọn tất cả</b></span>
-					</label>
-					<div
-						style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
-						<form id="myForm">
-							<!-- <label class="input-control checkbox" onclick=""> <input
-								type="checkbox" class="dist"> <span class="helper">Q.Hoàn
-									Kiếm</span>
-							</label><br /> <label class="input-control checkbox" onclick="">
-								<input type="checkbox" class="dist"> <span
-								class="helper">Q.Ba Đình</span>
-							</label> <br />  -->
-						</form>
-					</div>
-				</div></li>
-			<li class="active"><a href="#"> Caption </a>
-				<div>...content...</div></li>
-			<li><a href="#"> Caption </a>
-				<div>...content...</div></li>
-		</ul>
-	</div>
+                    <div style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
+                        <form id="dataForm">
+                            <div id="datatype_col">
+                                	<h3>Loại dữ liệu</h3>
 
-	<div id="result"></div>
-	<div id="container"></div>
-	<!-- form jquery -->
-	<script type="text/javascript">
-	// field showed var
-	var district_cb
-	//init var
-	var BAR_WIDTH=30;
-	var BAR_HEIGHT_MULTIPLE=5
-	var angularSpeed = 0.01; // revolutions per second
-    var lastTime = 0;
-	if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
-	
-	var container, stats;	
-	var camera, controls, scene, renderer;	
-	var group_plane,plane;
-	var group_cube=[];
-	var texture,image;
-	var strDataURI;// url of map tile
-	//MercatorProjection
-	var proj;
-	//google.maps
-	var G;
-	
-	var zoom = 12;
-	var NWLat,NWLng;
-	//var SELat,SELng;
-	var STATIC_MAP_HEIGHT=512,STATIC_MAP_WIDTH=512;
-	var PLANE_WIDTH=2560,PLANE_HEIGHT=2560;
-	var TILE_MULTIPLE = 5; //5x5
-	var coord = {
-		x :0,
-		y :0
-	}
-	var test_lat = 21.0357;
-	var test_lng = 105.8261;
-	var x_tile = 0;
-	var y_tile =0;
-	var tile_center_lng = 0;
-	var tile_center_lat = 0;
-	var jsonObj;
-	//get map tile, calculate lat, lng of tile
-	init_tiles();
-	//draw map div
-	var centerPoint = new G.LatLng(tile_center_lat,tile_center_lng);
-	//getCorners(centerPoint,zoom,STATIC_MAP_HEIGHT,STATIC_MAP_WIDTH);
-	latLngToCoord(test_lat,test_lng);
-	console.log("cube pos :"+coord.x+":"+coord.y);	
-	//Get fieldName
-	$(document).ready(function(){
-		<!-- SERVLET CALL -->				
-			
-			//Check All checkbox
-			$("#dist_all").change(function (){			
-				  if(this.checked) {
-					  console.log("dist_all checked");
-					$("input[type='checkbox']").prop("checked", true);	
-				  }
-				  else{
-					  console.log("dist_all unchecked");
-					  $("input[type='checkbox']").prop("checked", false);
-				  }
-			});
-			
-			$.ajax({			
-				url:"./StatsGet",
-				type:"GET",
-				dataType:"text",
-			}).success(function(data){
-				console.log("done:"+data);
-				//$("#result").text(data);
-				jsonObj = eval ("(" + data + ")");
-				for(var index = 0;index<jsonObj.fieldNames.length;index++){
-					if(jsonObj.fieldNames[index].type=="1"){
-						var label=$("<label>").attr({class:'input-control checkbox'});
-						var input=$("<input>");
-						input.attr({ type: 'checkbox', 'name':'dist', value: jsonObj.fieldNames[index].id });
-						var span=$("<span>").attr({class:'helper'});
-						span.append(jsonObj.fieldNames[index].name );
-						input.appendTo(label);
-						span.appendTo(label);
-						label.appendTo(myForm);
-						$("#myForm").append("<br/>");					
-					}
-				}
-				$("input[type='checkbox']").prop('checked',true);
-				init();	
-				graph();
-				animate();
+                            </div>
+                            <div id="time_col">
+                                	<h3>Thời gian</h3>
+
+                            </div>
+                        </form>	<a class="button default" onClick="drawDatatypeGraph()">View</a>
+
+                    </div>
+                    <li><a href="#"> Caption </a>
+
+                        <div>...content...</div>
+                    </li>
+            </ul>
+        </div>
+        <div id="container" style="width: 60%; margin: auto; float: left"></div>
+        <!-- form jquery -->
+        <script type="text/javascript">
+            // field showed var
+            var district_cb
+             //init var
+            var BAR_WIDTH = 30;
+			var BAR_WIDTH_DATATYPE = 25;
+			var BAR_HEIGHT_MULTIPLE_DATATYPE = 5;
+			var BAR_WIDTH_DATATYPE_SPACE = 1;
+            var BAR_HEIGHT_MULTIPLE = 5;
+            var angularSpeed = 0.01; // revolutions per second
+            var lastTime = 0;
+            if (!Detector.webgl) Detector.addGetWebGLMessage();
+
+            var container, stats;
+            var camera, controls, scene, renderer;
+            var group_plane, plane;
+            var group_cube = [];
+             //flag : which graph is showing
+            var graphtype_flag = 1; // 1 district , 2 datatype
+            var texture, image;
+            var strDataURI; // url of map tile
+             //MercatorProjection
+            var proj;
+             //google.maps
+            var G;
+
+            var zoom = 12;
+            var NWLat, NWLng;
+             //var SELat,SELng;
+            var STATIC_MAP_HEIGHT = 512,
+                STATIC_MAP_WIDTH = 512;
+            var PLANE_WIDTH = 2560,
+                PLANE_HEIGHT = 2560;
+            var TILE_MULTIPLE = 5; //5x5
+            var coord = {
+                x: 0,
+                y: 0
+            }
+            var test_lat = 21.0357;
+            var test_lng = 105.8261;
+            var x_tile = 0;
+            var y_tile = 0;
+            var tile_center_lng = 0;
+            var tile_center_lat = 0;
+            var jsonObj;
+             //get map tile, calculate lat, lng of tile
+            init_tiles();
+             //draw map div
+            var centerPoint = new G.LatLng(tile_center_lat, tile_center_lng);
+             //getCorners(centerPoint,zoom,STATIC_MAP_HEIGHT,STATIC_MAP_WIDTH);
+            latLngToCoord(test_lat, test_lng);
+            console.log("cube pos :" + coord.x + ":" + coord.y);
+             //Get fieldName
+            $(document).ready(function () {
+                <!-- Show prgress cycle -->
+                $("#container").append("<img  src='./images/preloader-w8-line-black.gif'>");
+                <!-- SERVLET CALL -->				
+                //Check All checkbox
+                $("#dist_all").change(function () {
+                    if (this.checked) {
+                        console.log("dist_all checked");
+                        $("input[type='checkbox']").prop("checked", true);
+                    } else {
+                        console.log("dist_all unchecked");
+                        $("input[type='checkbox']").prop("checked", false);
+                    }
+                });
+                $.ajax({
+                    url: "./StatsGet",
+                    type: "GET",
+                    dataType: "text",
+                    //data:{num1:n1,num2:n2,},
+                }).success(function (data) {
+                    <!-- Remove prgress cycle -->
+                    $("#container").empty();
+                    console.log("done:" + data);
+                    jsonObj = eval("(" + data + ")");
+                    for (var index = 0; index < jsonObj.fieldNames.length; index++) {
+                        switch (jsonObj.fieldNames[index].type) {
+                            case 1:
+                                // district fieldName
+                                var label = $("<label>").attr({
+                                    class: 'input-control checkbox'
+                                });
+                                var input = $("<input>");
+                                input.attr({
+                                    type: 'checkbox',
+                                    name: 'dist',
+                                    value: jsonObj.fieldNames[index].id
+                                });
+                                var span = $("<span>").attr({
+                                    class: 'helper'
+                                });
+                                span.append(jsonObj.fieldNames[index].name);
+                                input.appendTo(label);
+                                span.appendTo(label);
+                                label.appendTo(distForm);
+                                $("#distForm").append("<br/>");
+                                break;
+                            case 3:
+                                // datatype fieldName
+                                var label = $("<label>").attr({
+                                    class: 'input-control checkbox'
+                                });
+                                var input = $("<input>");
+                                input.attr({
+                                    type: 'checkbox',
+                                    name: 'datatype',
+                                    value: jsonObj.fieldNames[index].id
+                                });
+                                var span = $("<span>").attr({
+                                    class: 'helper'
+                                });
+                                span.append(jsonObj.fieldNames[index].name);
+                                input.appendTo(label);
+                                span.appendTo(label);
+                                label.appendTo(datatype_col);
+                                $("#datatype_col").append("<br/>");
+                                break;
+                            case 4:
+                                // datatype fieldName
+                                var label = $("<label>").attr({
+                                    class: 'input-control checkbox'
+                                });
+                                var input = $("<input>");
+                                input.attr({
+                                    type: 'checkbox',
+                                    name: 'time',
+                                    value: jsonObj.fieldNames[index].id
+                                });
+                                var span = $("<span>").attr({
+                                    class: 'helper'
+                                });
+                                span.append(jsonObj.fieldNames[index].name);
+                                input.appendTo(label);
+                                span.appendTo(label);
+                                label.appendTo(time_col);
+                                $("#time_col").append("<br/>");
+                                break;
+                            default:
+                                break;
+                        }
+                    }
+                    $("#datatype_col").append("<br/>");
+                    $("#datatype_col").append("<br/>");
+                    $("#datatype_col").append("<br/>");
+                    $("#datatype_col").append("<br/>");
+                    $("input[type='checkbox'][name='dist']").prop('checked', true);
+					$("input[type='checkbox'][name='datatype']").prop('checked', true);
+                    init();					
+                    graph();
+                    animate();
+                    $("input[type='checkbox']").change(function () {					
+                        console.log("check change,box " + $("input[type='checkbox'][value='4'][name='dist']").get(0).name + " length:" + $("input[type='checkbox'][value='4'][name='dist']").length + " is : " + $("input[type='checkbox'][value='4']")[0].checked);
+                        console.log("check change,box " + $(this).attr("name") + " is " + $(this).is(":checked"));
+                        if ($("input[type='checkbox']:not(:checked)").length == 1) {
+                            //console.log("1 unchecked");
+                            if ($("#dist_all").is(":not(:checked)")) {
+                                //console.log("and thats dist_all-> check dist_all now");y
+                                $("#dist_all").prop('checked', true);
+                            } else {
+                                console.log("uncheck idst_all now");
+                                $("#dist_all").prop('checked', false);
+                            }
+                        }
+                        //draw mapgraph
+						if($(this).attr("name")=="dist"){							
+							drawDistGraph();
+						}
+						else {
+							drawDatatypeGraph();
+						}
+                    });
+                });
+            });
+             <!--  Three js Script -->
+
+            function drawDistGraph() {			
+                graphtype_flag = 1;
+                graph();
+            }
+
+            function drawDatatypeGraph() {
 				
-				
-				$("input[type='checkbox']").change(function(){
-					//console.log("check change" + $("input[type='checkbox']:not(:checked)").length);
-					
-					if($("input[type='checkbox']:not(:checked)").length==1){
-						//console.log("1 unchecked");
-						if($("#dist_all").is(":not(:checked)")){
+                graphtype_flag = 2;
+                graph();
+            }
+            /*  SERVLET CALL */
+             // Set up the three.js scene. This is the most basic setup without
+             // any special stuff
+            function init() {
+				console.log("init :"+graphtype_flag);
+                // set the scene size
+                var WIDTH = 600,
+                    HEIGHT = 600;
+
+                // set some camera attributes
+                var VIEW_ANGLE = 45,
+                    ASPECT = window.innerWidth / window.innerHeight,
+                    NEAR = 1,
+                    FAR = 10000;
+
+                // create a WebGL renderer, camera, and a scene
+                renderer = new THREE.WebGLRenderer({
+                    clearColor: 0xffffff,
+                    clearAlpha: 0.5,
+                    antialias: true
+                });
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                var maxAnisotropy = renderer.getMaxAnisotropy();
+                camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
+                scene = new THREE.Scene();
+
+                // add and position the camera at a fixed position
+                // camera
+                // camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
+                camera.position.y = 1300;
+                camera.position.z = 1300;
+
+                //camera.rotation.x = 45 * (Math.PI / 180);
+
+
+                // control
+                controls = new THREE.TrackballControls(camera);
+
+                controls.rotateSpeed = 1.0;
+                controls.zoomSpeed = 1.2;
+                controls.panSpeed = 0.8;
+
+                controls.noRotate = false;
+                controls.noZoom = false;
+                controls.noPan = false;
+
+                controls.staticMoving = true;
+                controls.dynamicDampingFactor = 0.3;
+
+                controls.keys = [65, 83, 68];
+
+                controls.addEventListener('change', render);
+                //controls = new THREE.OrbitControls( camera );
+                //controls.autoRotate = true;
+                //controls.rotateSpeed = 1.0;
+                //controls.zoomSpeed = 1.2;
+                //controls.panSpeed = 0.8;
+
+                //controls.noZoom = false;
+                //controls.noPan = false;
+
+                //controls.dynamicDampingFactor = 0.3;
+
+                //controls.keys = [ 65, 83, 68 ];
+
+                controls.addEventListener('change', render);
+                // start the renderer, and black background
+                //renderer.setSize(WIDTH, HEIGHT);
+                //renderer.setClearColor(0x000);
+
+                // add the render target to the page
+                //$("#chart").append(renderer.domElement);
+
+                // add subtle ambient lighting
+                var ambientLight = new THREE.AmbientLight(0x555555);
+                scene.add(ambientLight);
+
+                // add directional light source
+                var directionalLight = new THREE.DirectionalLight(0xffffff);
+                directionalLight.position.set(1, 1, 1);
+                directionalLight.target.position.set(0, 0, 0);
+                directionalLight.shadowCameraVisible = true;
+                directionalLight.castShadow = true;
+                scene.add(directionalLight);
+                var spotLight = new THREE.SpotLight(0xffffff, 0.3);
+                spotLight.position.set(-250, 250, 100);
+                spotLight.castShadow = true;
+                spotLight.shadowMapWidth = 1024;
+                spotLight.shadowMapHeight = 1024;
+                spotLight.shadowCameraNear = 500;
+                spotLight.shadowCameraFar = 4000;
+                spotLight.shadowCameraFov = 30;
+                scene.add(spotLight);
+                //group
+                group_plane = new THREE.Object3D();
+
+                // plane
+                for (var i = -(TILE_MULTIPLE - 1) / 2; i <= (TILE_MULTIPLE - 1) / 2; i++) {
+                    for (var j = -(TILE_MULTIPLE - 1) / 2; j <= (TILE_MULTIPLE - 1) / 2; j++) {
+
+
+                        //texture
+                        //image = document.getElementById("myCanvas");
+
+                        //imageContext = image.getContext( '2d' );
+                        //imageContext.fillStyle = '#FF0000';
+                        //imageContext.fillRect(0,0,150,75);
+
+                        texture = new THREE.Texture(image);
+                        // material
+                        var material = new THREE.MeshLambertMaterial({
+                            map: THREE.ImageUtils.loadTexture(getURL(i, j))
+                            //map: texture
+                            ,
+                            overdraw: true,
+                            opacity: 0.9,
+                            transparent: true
+                        });
+                        //console.log(getURL(i,j));
+                        plane = new THREE.Mesh(new THREE.PlaneGeometry(STATIC_MAP_WIDTH, STATIC_MAP_HEIGHT, 1, 1), material);
+                        plane.overdraw = true;
+                        plane.doubleSided = true;
+                        plane.position.z = -j * STATIC_MAP_HEIGHT;
+                        plane.position.x = i * STATIC_MAP_WIDTH;
+                        plane.rotation.x = -Math.PI / 2;
+                        plane.material.side = THREE.DoubleSide;
+                        group_plane.add(plane);
+                    }
+                }
+                scene.add(group_plane);
+                //console.log("plan"+plane.rotation.x+":"+plane.rotation.y+":"+plane.rotation.z);		
+
+
+                //Axes
+                //var axes = new THREE.AxisHelper();
+                //axes.scale.set( 100, 100, 100 );
+                //scene.add( axes );
+                // renderer
+
+                //renderer = new THREE.WebGLRenderer( { antialias: false } );
+                //renderer.setClearColor(0x000);
+                //renderer.setSize(WIDTH, HEIGHT);
+
+
+                container = document.getElementById('container');
+                container.appendChild(renderer.domElement);
+
+                stats = new Stats();
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.top = '0px';
+                stats.domElement.style.zIndex = 100;
+                container.appendChild(stats.domElement);
+
+                //
+
+                window.addEventListener('resize', onWindowResize, false);
+            }
+
+            function onWindowResize() {
+
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+
+                renderer.setSize(window.innerWidth, window.innerHeight);
+
+                controls.handleResize();
+
+                render();
+
+            }
+
+            function graph() {
+                // Cube
+                for (var i = 0; i < group_cube.length; i++) {
+                    scene.remove(group_cube[i]);
+                }
+                group_cube = [];
+                switch (graphtype_flag) {
+                    case 1:
+						console.log("drawDistGraph");
+						console.log("data:");	
+                        // draw district graph
+                        for (var index = 0; index < jsonObj.districtStats.length; index++) {
 							
-							//console.log("and thats dist_all-> check dist_all now");
-							$("#dist_all").prop('checked', true);
-						}
-						else{
-							console.log("uncheck idst_all now");
-							$("#dist_all").prop('checked', false);
-						}
-					}
-					//draw mapgraph
-					graph();
+                            //console.log("district_id:"+jsonObj.districtStats[index].district_id);
+                            //console.log("checkbox is:"+$("input[type='checkbox'][value="+jsonObj.districtStats[index].district_id+"]").is(':checked'));
+                            if ($("input[type='checkbox'][value=" + jsonObj.districtStats[index].district_id + "][name='dist']").is(':checked')) {
+                                latLngToCoord(jsonObj.districtStats[index].lat, jsonObj.districtStats[index].lng);
+								console.log(jsonObj.districtStats[index].data);	
+                                var geometry = new THREE.CubeGeometry(BAR_WIDTH, (jsonObj.districtStats[index].data+0.1 )* BAR_HEIGHT_MULTIPLE, BAR_WIDTH);
+                                for (var i = 0; i < geometry.faces.length; i++) {
+                                    geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+                                }
+		
+                                var material = new THREE.MeshBasicMaterial({
+                                    vertexColors: THREE.FaceColors
+                                });
+                                var cube = new THREE.Mesh(geometry, material);
+                                cube.position.z = -coord.y;
+                                cube.position.x = coord.x;
+                                cube.position.y = jsonObj.districtStats[index].data * BAR_HEIGHT_MULTIPLE / 2;
+                                group_cube.push(cube);
+                                scene.add(cube);
+                            }
+                        }
+                        break;
+                    case 2:
+						console.log("drawDatatypeGraph");
+						console.log("data:");						
+                        // draw datatype stats graph
+						var countSurveyTXT=0,countSurveyIMG=0,countSurveyAUD=0,countSurveyVID=0,curDistrict;
+						//loop thourgh dataTypeStats Item
+                        for (var index = 0; index < jsonObj.dataTypeStats.length; index++) {
+							countSurveyTXT=0.1,countSurveyIMG=0.1,countSurveyAUD=0.1,countSurveyVID=0.1,curDistrict=jsonObj.dataTypeStats[index].district_id;							
+                            //console.log("curDistrict:"+curDistrict);
+							latLngToCoord(jsonObj.dataTypeStats[index].lat, jsonObj.dataTypeStats[index].lng);
+							// for each dataType item , loop thourgh each district , count & add to countSurvey
+							while (index<jsonObj.dataTypeStats.length&&curDistrict==jsonObj.dataTypeStats[index].district_id){
+								
+								// if its time-checkbox is checked , count that data
+								if($("input[type='checkbox'][value=" + jsonObj.dataTypeStats[index].time_id + "][name='time']").is(':checked')){ // count only checked_time 
+									//console.log("index:"+index);
+									//console.log("jsonObj.dataTypeStats[index].datatype:"+jsonObj.dataTypeStats[index].datatype_id);
+									//if(jsonObj.dataTypeStats[index].datatype_id==1){
+									//	countSurveyTXT++;
+									//}
+									switch(jsonObj.dataTypeStats[index].datatype_id){
+										case 1:
+											countSurveyTXT+=jsonObj.dataTypeStats[index].data;
+											break;
+										case 2:
+											countSurveyIMG+=jsonObj.dataTypeStats[index].data;
+											break;									
+										case 3:
+											countSurveyAUD+=jsonObj.dataTypeStats[index].data;											
+											break;
+										case 4:
+											countSurveyVID+=jsonObj.dataTypeStats[index].data;
+											break;
+										default:
+											console.log(jsonObj.dataTypeStats[index].data);
+											break;
+									}
+									
+								}
+								// increase index
+								index++;
+							}	
 					
-				}); 
-			});	
-	});
-	<!--  Three js Script -->
+							// draw only checked_datatype
+							for(var datatype_index = 1 ; datatype_index <= 4 ; datatype_index++){	
+								if ($("input[type='checkbox'][value=" + datatype_index + "][name='datatype']").is(':checked')) {									
+									//bar position
+									switch (datatype_index){
+										case 1:							
+											var geometry = new THREE.CubeGeometry(BAR_WIDTH_DATATYPE, countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE, BAR_WIDTH_DATATYPE);
+											for (var i = 0; i < geometry.faces.length; i++) {
+												geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+											}
+											var material = new THREE.MeshBasicMaterial({
+												vertexColors: THREE.FaceColors
+											});
+											var cube = new THREE.Mesh(geometry, material);
+											cube.position.z = -(coord.y-BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE);
+											cube.position.x = coord.x-BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE;
+											cube.position.y = countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE / 2;
+											group_cube.push(cube);
+											scene.add(cube);										
+											break;
+										case 2:
+											var geometry = new THREE.CubeGeometry(BAR_WIDTH_DATATYPE, countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE, BAR_WIDTH_DATATYPE);
+											for (var i = 0; i < geometry.faces.length; i++) {
+												geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+											}
+											var material = new THREE.MeshBasicMaterial({
+												vertexColors: THREE.FaceColors
+											});
+											var cube = new THREE.Mesh(geometry, material);
+											cube.position.z = -(coord.y-BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE);
+											cube.position.x = coord.x+BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE;
+											cube.position.y = countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE / 2;
+											group_cube.push(cube);
+											scene.add(cube);
+											break;
+										case 3:
+											var geometry = new THREE.CubeGeometry(BAR_WIDTH_DATATYPE, countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE, BAR_WIDTH_DATATYPE);
+											for (var i = 0; i < geometry.faces.length; i++) {
+												geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+											}
+											var material = new THREE.MeshBasicMaterial({
+												vertexColors: THREE.FaceColors
+											});
+											var cube = new THREE.Mesh(geometry, material);
+											cube.position.z = -(coord.y+BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE);
+											cube.position.x = coord.x-BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE;
+											cube.position.y = countSurveyAUD* BAR_HEIGHT_MULTIPLE_DATATYPE / 2;
+											group_cube.push(cube);
+											scene.add(cube);
+											break;
+										case 4:
+											var geometry = new THREE.CubeGeometry(BAR_WIDTH_DATATYPE, countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE, BAR_WIDTH_DATATYPE);
+											for (var i = 0; i < geometry.faces.length; i++) {
+												geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+											}
+											var material = new THREE.MeshBasicMaterial({
+												vertexColors: THREE.FaceColors
+											});
+											var cube = new THREE.Mesh(geometry, material);
+											cube.position.z = -(coord.y+BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE);
+											cube.position.x = coord.x+BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE;
+											cube.position.y = countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE / 2;
+											group_cube.push(cube);
+											scene.add(cube);
+											break;
+										default:
+											console.log("countSurvey:"+countSurveyTXT+":"+countSurveyIMG+":"+countSurveyAUD+":"+countSurveyVID);
+											break;
+									}
+								}
+								
+							}
+							
+							
+							
+							
+                        }
+                        break;
+                    default:
+                        break;
+                }
 
-	/*  SERVLET CALL 
-	$(document).ready(function(){
-		
-		$("#button").click(function(){				
-			$.ajax({			
-				url:"./StatsGet",
-				type:"GET",
-				dataType:"text",
-			}).success(function(data){
-				console.log("done:"+data);
-				//$("#result").text(data);
-				jsonObj = eval ("(" + data + ")");
-				init();	
-				animate();
+            }
 
-			});	
-		});
-	}); */
-	// Set up the three.js scene. This is the most basic setup without
-	// any special stuff
-	function init() {
-		
-		// set the scene size
-		var WIDTH = 600, HEIGHT = 600;
+            function animate() {
+                requestAnimationFrame(animate);
+                // update
 
-		// set some camera attributes
-		var VIEW_ANGLE = 45, ASPECT = window.innerWidth / window.innerHeight, NEAR = 1, FAR = 10000;
+                var date = new Date();
+                var time = date.getTime();
+                var timeDiff = time - lastTime;
+                var angleChange = angularSpeed * timeDiff * 2 * Math.PI / 1000;
+                //plane.rotation.z += angleChange;
+                //cube.rotation.z += angleChange;
 
-		// create a WebGL renderer, camera, and a scene
-		renderer = new THREE.WebGLRenderer({clearColor: 0xffffff, clearAlpha: 0.5,antialias:true});
-		renderer.setSize( window.innerWidth, window.innerHeight );
-		var maxAnisotropy = renderer.getMaxAnisotropy();
-		camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
-		scene = new THREE.Scene();
+                lastTime = time;
 
-		// add and position the camera at a fixed position
-		  // camera
-       // camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-        camera.position.y = 1300;
-        camera.position.z = 1300;
-		
-        //camera.rotation.x = 45 * (Math.PI / 180);
-		
-		
-		// control
-		controls = new THREE.TrackballControls( camera );
+                render();
+                update();
 
-		controls.rotateSpeed = 1.0;
-		controls.zoomSpeed = 1.2;
-		controls.panSpeed = 0.8;
 
-		controls.noRotate = false;
-		controls.noZoom = false;
-		controls.noPan = false;
-		
-		controls.staticMoving = true;
-		controls.dynamicDampingFactor = 0.3;
+            }
 
-		controls.keys = [ 65, 83, 68 ];
-		
-		controls.addEventListener( 'change', render );
-		//controls = new THREE.OrbitControls( camera );
-		//controls.autoRotate = true;
-		//controls.rotateSpeed = 1.0;
-		//controls.zoomSpeed = 1.2;
-		//controls.panSpeed = 0.8;
+            function update() {
+                controls.update();
+                //camera.position.z = Math.max( camera.position.z, 50);
+                stats.update();
+            }
 
-		//controls.noZoom = false;
-		//controls.noPan = false;
+            function render() {
+                renderer.render(scene, camera);
+                //console.log(camera.position.x+":"+camera.position.y+":"+camera.position.z);		
+                //console.log("rot"+camera.rotation.x+":"+camera.rotation.y+":"+camera.rotation.z);
+            }
 
-		//controls.dynamicDampingFactor = 0.3;
+            function getCorners(center, zoom, mapWidth, mapHeight) {
+                var scale = Math.pow(2, zoom);
+                var centerPx = proj.fromLatLngToPoint(center);
+                var SWPoint = {
+                    x: (centerPx.x - (mapWidth / 2) / scale),
+                    y: (centerPx.y + (mapHeight / 2) / scale)
+                };
+                SWLatLng = proj.fromPointToLatLng(SWPoint);
+                //console.log('SW: ' + SWLatLng);
+                var NEPoint = {
+                    x: (centerPx.x + (mapWidth / 2) / scale),
+                    y: (centerPx.y - (mapHeight / 2) / scale)
+                };
+                NELatLng = proj.fromPointToLatLng(NEPoint);
+                //console.log(' NE: '+ NELatLng);
+            }
 
-		//controls.keys = [ 65, 83, 68 ];
+             //get map tile, calculate lat, lng of tile
 
-		controls.addEventListener( 'change', render );
-		// start the renderer, and black background
-		//renderer.setSize(WIDTH, HEIGHT);
-		//renderer.setClearColor(0x000);
+            function init_tiles() {
+                //proj = new MercatorProjection();
+                G = google.maps;
+                // get x y of the tile in selected lat-lng	
+                x_tile = long2tile(test_lng, zoom);
+                y_tile = lat2tile(test_lat, zoom);
+                //get lat - lng of the center of the tile image fetched
+                tile_center_lng = tile2long(x_tile + 0.5, zoom); // + 0.5 to return center point , return NW corner by default 
+                tile_center_lat = tile2lat(y_tile + 0.5, zoom);
+                NWLng = tile2long(x_tile, zoom);
+                NWLat = tile2lat(y_tile, zoom);
+                //SELat = tile2long(x_tile+1,zoom);
+                //SELng = tile2lat(x_tile+1,zoom);
+                //strDataURI = "http://b.tile.openstreetmap.org/"+zoom+"/"+x_tile+"/"+y_tile+".png";
+                //console.log("x_tile :"+long2tile(test_lng,zoom));
+                //console.log("y_tile :"+lat2tile(test_lat,zoom));
+                //console.log("tile center long:"+tile2long(x_tile+0.5,zoom));
+                //console.log("tile center lat :"+tile2lat(y_tile+0.5,zoom));
+                //console.log("tile NW long:"+tile2long(x_tile,zoom));
+                //console.log("tile NW lat :"+tile2lat(y_tile,zoom));
+                //console.log("strDataURI :"+strDataURI);
 
-		// add the render target to the page
-		//$("#chart").append(renderer.domElement);
+            }
+             // GET URL OF TILE
 
-		// add subtle ambient lighting
-        var ambientLight = new THREE.AmbientLight(0x555555);
-        scene.add(ambientLight);
- 
-        // add directional light source
-        var directionalLight = new THREE.DirectionalLight(0xffffff);
-        directionalLight.position.set( 1, 1, 1);
-		directionalLight.target.position.set( 0, 0, 0 );
-		directionalLight.shadowCameraVisible = true;
-		directionalLight.castShadow = true;
-        scene.add(directionalLight);
-		var spotLight = new THREE.SpotLight( 0xffffff,0.3 ); 
-		spotLight.position.set( -250, 250, 100 );  
-		spotLight.castShadow = true;  
-		spotLight.shadowMapWidth = 1024; 
-		spotLight.shadowMapHeight = 1024;  
-		spotLight.shadowCameraNear = 500; 
-		spotLight.shadowCameraFar = 4000; 
-		spotLight.shadowCameraFov = 30; 
-		scene.add( spotLight );
-		//group
-		group_plane = new THREE.Object3D();
-		
-		// plane
-		for ( var i = -(TILE_MULTIPLE-1)/2; i <= (TILE_MULTIPLE-1)/2; i ++ ) {
-			for ( var j = -(TILE_MULTIPLE-1)/2; j <= (TILE_MULTIPLE-1)/2; j ++ ) {
-			
-			
-				//texture
-				//image = document.getElementById("myCanvas");
+            function getURL(x_offset, y_offset) {
+                var temp_x = x_tile + x_offset;
+                var temp_y = y_tile - y_offset; // map tile aray count from top left , coord count from left botom
+                // select random server
+                var servers = [
+                        "a",
+                        "b",
+                        "c"
+                ];
+                var server = servers[Math.floor(Math.random() * servers.length)];
+                return "http://" + server + ".tile.openstreetmap.org/" + zoom + "/" + temp_x + "/" + temp_y + ".png";
+            }
+             // draw canvas	
+             // utils function
 
-				//imageContext = image.getContext( '2d' );
-				//imageContext.fillStyle = '#FF0000';
-				//imageContext.fillRect(0,0,150,75);
+            function long2tile(lon, zoom) {
+                return (Math.floor((lon + 180) / 360 * Math.pow(2, zoom)));
+            }
 
-				texture = new THREE.Texture( image);
-				// material
-				var material = new THREE.MeshLambertMaterial({
-					map: THREE.ImageUtils.loadTexture(getURL(i,j))
-				   //map: texture
-				   , overdraw: true
-				   ,opacity: 0.9
-				   ,transparent: true
-				});
-				//console.log(getURL(i,j));
-				plane = new THREE.Mesh(new THREE.PlaneGeometry(STATIC_MAP_WIDTH, STATIC_MAP_HEIGHT, 1, 1), material);		
-				plane.overdraw = true;
-				plane.doubleSided = true;
-				plane.position.z = -j*STATIC_MAP_HEIGHT;
-				plane.position.x = i*STATIC_MAP_WIDTH;
-				plane.rotation.x = -Math.PI/2;
-				plane.material.side = THREE.DoubleSide;
-				group_plane.add(plane);
-			}
-		}
-        scene.add(group_plane);
-		//console.log("plan"+plane.rotation.x+":"+plane.rotation.y+":"+plane.rotation.z);		
-		
-		
-		//Axes
-		//var axes = new THREE.AxisHelper();
-		//axes.scale.set( 100, 100, 100 );
-		//scene.add( axes );
-		// renderer
+            function lat2tile(lat, zoom) {
+                return (Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom)));
+            }
 
-		//renderer = new THREE.WebGLRenderer( { antialias: false } );
-		//renderer.setClearColor(0x000);
-		//renderer.setSize(WIDTH, HEIGHT);
-		
+            function tile2long(x, z) {
+                return (x / Math.pow(2, z) * 360 - 180);
+            }
 
-		container = document.getElementById( 'container' );
-		container.appendChild( renderer.domElement );
+            function tile2lat(y, z) {
+                var n = Math.PI - 2 * Math.PI * y / Math.pow(2, z);
+                return (180 / Math.PI * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n))));
+            }
 
-		stats = new Stats();
-		stats.domElement.style.position = 'absolute';
-		stats.domElement.style.top = '0px';
-		stats.domElement.style.zIndex = 100;
-		container.appendChild( stats.domElement );
+             // convert LatLng to coordination in the scene
 
-		//
+            function latLngToCoord(lat, lng) {
+                //console.log(' PLANE_HEIGHT: '+ PLANE_HEIGHT);
+                //console.log(' PLANE_WIDTH: '+ PLANE_WIDTH);
+                //console.log(' centerPoint.lat(): '+ centerPoint.lat());
+                //console.log(' centerPoint.lng(): '+ centerPoint.lng());
+                //console.log(' NWLat: '+ NWLat);
+                //console.log(' NWLng: '+ NWLng);
+                coord.y = (STATIC_MAP_HEIGHT / 2) * ((lat - centerPoint.lat()) / (NWLat - centerPoint.lat()));
+                coord.x = (STATIC_MAP_WIDTH / 2) * ((lng - centerPoint.lng()) / (centerPoint.lng() - NWLng));
+            }
+        </script>
+    </body>
 
-		window.addEventListener( 'resize', onWindowResize, false );
-	}
-
-	function onWindowResize() {
-
-		camera.aspect = window.innerWidth / window.innerHeight;
-		camera.updateProjectionMatrix();
-
-		renderer.setSize( window.innerWidth, window.innerHeight );
-
-		controls.handleResize();
-
-		render();
-
-	}
-	function graph(){
-		// Cube
-		for (var i=0;i<group_cube.length;i++){
-			scene.remove(group_cube[i]);
-		}
-		group_cube=[];
-	
-		for(var index = 0;index<jsonObj.districtStats.length;index++){
-			//remove old cube
-		
-			//draw cube /bar graph
-			//console.log("district_id:"+jsonObj.districtStats[index].district_id);
-			//console.log("checkbox is:"+$("input[type='checkbox'][value="+jsonObj.districtStats[index].district_id+"]").is(':checked'));
-			if($("input[type='checkbox'][value="+jsonObj.districtStats[index].district_id+"]").is(':checked')){
-				latLngToCoord(jsonObj.districtStats[index].lat,jsonObj.districtStats[index].lng);
-				var geometry = new THREE.CubeGeometry( BAR_WIDTH, jsonObj.districtStats[index].data*BAR_HEIGHT_MULTIPLE, BAR_WIDTH );
-				for ( var i = 0; i < geometry.faces.length; i ++ ) {
-					geometry.faces[ i ].color.setHex( Math.random() * 0xffffff );
-		
-				}
-		
-				var material = new THREE.MeshBasicMaterial( { vertexColors: THREE.FaceColors } );
-				var cube = new THREE.Mesh( geometry, material );
-				cube.position.z = -coord.y;
-				cube.position.x = coord.x;
-				cube.position.y =jsonObj.districtStats[index].data*BAR_HEIGHT_MULTIPLE/2;
-				group_cube.push( cube );
-				scene.add(cube);
-			}
-		}
-		
-	}
-	function animate() {
-		requestAnimationFrame( animate );
-		// update
-		
-		var date = new Date();
-		var time = date.getTime();
-		var timeDiff = time - lastTime;
-		var angleChange = angularSpeed * timeDiff * 2 * Math.PI / 1000;
-		//plane.rotation.z += angleChange;
-		//cube.rotation.z += angleChange;
-		
-		lastTime = time;
-		
-		render();
-		update();	
-		
-		
-	}
-	
-	function update(){
-		controls.update();
-		//camera.position.z = Math.max( camera.position.z, 50);
-		stats.update();
-	}
-	
-	function render() {
-		renderer.render( scene, camera );	
-		//console.log(camera.position.x+":"+camera.position.y+":"+camera.position.z);		
-		//console.log("rot"+camera.rotation.x+":"+camera.rotation.y+":"+camera.rotation.z);
-	}
-	function getCorners(center,zoom,mapWidth,mapHeight){
-		var scale = Math.pow(2,zoom);
-		var centerPx = proj.fromLatLngToPoint(center);
-		var SWPoint = {x: (centerPx.x -(mapWidth/2)/ scale) , y: (centerPx.y + (mapHeight/2)/ scale)};
-		SWLatLng = proj.fromPointToLatLng(SWPoint);
-		//console.log('SW: ' + SWLatLng);
-		var NEPoint = {x: (centerPx.x +(mapWidth/2)/ scale) , y: (centerPx.y - (mapHeight/2)/ scale)};
-		NELatLng = proj.fromPointToLatLng(NEPoint);
-		//console.log(' NE: '+ NELatLng);
-	}
-	
-	//get map tile, calculate lat, lng of tile
-	function init_tiles(){
-		//proj = new MercatorProjection();
-		G = google.maps;
-		// get x y of the tile in selected lat-lng	
-		x_tile = long2tile(test_lng,zoom);
-		y_tile = lat2tile(test_lat,zoom);
-		//get lat - lng of the center of the tile image fetched
-		tile_center_lng = tile2long(x_tile+0.5,zoom); // + 0.5 to return center point , return NW corner by default 
-		tile_center_lat = tile2lat(y_tile+0.5,zoom);
-		NWLng = tile2long(x_tile,zoom);
-		NWLat = tile2lat(y_tile,zoom);
-		//SELat = tile2long(x_tile+1,zoom);
-		//SELng = tile2lat(x_tile+1,zoom);
-		//strDataURI = "http://b.tile.openstreetmap.org/"+zoom+"/"+x_tile+"/"+y_tile+".png";
-		//console.log("x_tile :"+long2tile(test_lng,zoom));
-		//console.log("y_tile :"+lat2tile(test_lat,zoom));
-		//console.log("tile center long:"+tile2long(x_tile+0.5,zoom));
-		//console.log("tile center lat :"+tile2lat(y_tile+0.5,zoom));
-		//console.log("tile NW long:"+tile2long(x_tile,zoom));
-		//console.log("tile NW lat :"+tile2lat(y_tile,zoom));
-		//console.log("strDataURI :"+strDataURI);
-		
-	}
-	// GET URL OF TILE
-	function getURL(x_offset,y_offset){
-	var temp_x = x_tile+x_offset;
-	var temp_y = y_tile-y_offset;  // map tile aray count from top left , coord count from left botom
-		// select random server
-		var servers = [
-			"a",
-			"b",
-			"c"
-		];
-		var server = servers[Math.floor(Math.random()*servers.length)];
-		return "http://"+server+".tile.openstreetmap.org/"+zoom+"/"+temp_x+"/"+temp_y+".png";
-	}
-	// draw canvas	
-	// utils function
-	function long2tile(lon,zoom) { 
-		return (Math.floor((lon+180)/360*Math.pow(2,zoom))); 
-	}
-	function lat2tile(lat,zoom)  {
-		return (Math.floor((1-Math.log(Math.tan(lat*Math.PI/180) + 1/Math.cos(lat*Math.PI/180))/Math.PI)/2 *Math.pow(2,zoom))); 
-	}
-	function tile2long(x,z) {
-		return (x/Math.pow(2,z)*360-180);
-	}
-	function tile2lat(y,z) {
-		var n=Math.PI-2*Math.PI*y/Math.pow(2,z);
-		return (180/Math.PI*Math.atan(0.5*(Math.exp(n)-Math.exp(-n))));
-	}
-	
-	// convert LatLng to coordination in the scene
-	function latLngToCoord(lat,lng){
-		//console.log(' PLANE_HEIGHT: '+ PLANE_HEIGHT);
-		//console.log(' PLANE_WIDTH: '+ PLANE_WIDTH);
-		//console.log(' centerPoint.lat(): '+ centerPoint.lat());
-		//console.log(' centerPoint.lng(): '+ centerPoint.lng());
-		//console.log(' NWLat: '+ NWLat);
-		//console.log(' NWLng: '+ NWLng);
-		coord.y= (STATIC_MAP_HEIGHT/2)*((lat-centerPoint.lat())/(NWLat-centerPoint.lat()));
-		coord.x= (STATIC_MAP_WIDTH/2)*((lng-centerPoint.lng())/(centerPoint.lng()-NWLng));
-	}
-	
-	
-</script>
-</body>
 </html>
