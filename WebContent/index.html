@@ -3,6 +3,8 @@
     
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    	<link href="modern-responsive.css" rel="stylesheet">
         <title>3D visualization Web data statistics</title>
         <script type="text/javascript" src="js/three.js"></script>
         <script type="text/javascript" src="js/constants.js"></script>
@@ -35,7 +37,7 @@
     </head>
     
     <body class="metrouicss" style="zoom: 1;">
-        <div id="form" style="width: 40%; margin: auto; float: left">
+        <div id="form" style="width: 30%; margin: auto; float: left">
             <!-- <input type="submit" value="Submit" id="button" />
             <input type="reset" value="Reset" />-->
             <!-- <h2>Form</h2> -->
@@ -47,19 +49,17 @@
                             <input type="checkbox" id="dist_all" name="dist" value="dist_all">	<span class="helper"><b>Chọn tất cả</b></span>
 
                         </label>
-                        <div style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
+                        <div id="districtFormContainer" style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
                             <form id="distForm"></form>	<a class="button default" onClick="drawDistGraph()">View</a>
-
                         </div>
                     </div>
                 </li>
                 <li><a href="#"> Thống kê sử dụng </a>
 
-                    <div style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
+                    <div id="dataFormContainer" style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
                         <form id="dataForm">
                             <div id="datatype_col">
                                 	<h3>Loại dữ liệu</h3>
-
                             </div>
                             <div id="time_col">
                                 	<h3>Thời gian</h3>
@@ -74,9 +74,10 @@
                     </li>
             </ul>
         </div>
-        <div id="container" style="width: 60%; margin: auto; float: left"></div>
+        <div id="container" style="width: 70%; margin: auto; float: left"></div>
         <!-- form jquery -->
         <script type="text/javascript">
+        	
             // field showed var
             var district_cb
              //init var
@@ -130,6 +131,7 @@
             console.log("cube pos :" + coord.x + ":" + coord.y);
              //Get fieldName
             $(document).ready(function () {
+            	responsive();
                 <!-- Show prgress cycle -->
                 $("#container").append("<img  src='./images/preloader-w8-line-black.gif'>");
                 <!-- SERVLET CALL -->				
@@ -157,16 +159,16 @@
                         switch (jsonObj.fieldNames[index].type) {
                             case 1:
                                 // district fieldName
-                                var label = $("<label>").attr({
+                                var label = $("<label >").attr({
                                     class: 'input-control checkbox'
                                 });
-                                var input = $("<input>");
+                                var input = $("<input >");
                                 input.attr({
                                     type: 'checkbox',
                                     name: 'dist',
                                     value: jsonObj.fieldNames[index].id
                                 });
-                                var span = $("<span>").attr({
+                                var span = $("<span  style='overflow:hidden;'>").attr({
                                     class: 'helper'
                                 });
                                 span.append(jsonObj.fieldNames[index].name);
@@ -249,8 +251,49 @@
 							drawDatatypeGraph();
 						}
                     });
+                    $(window).resize(function() {
+                    	console.log("body width:"+$('body').innerWidth() );
+                    	responsive();
+                    });
                 });
             });
+            function responsive(){
+            	console.log("body width:"+$('body').innerWidth() );
+           	 	if($('body').innerWidth()>=1340){
+            		$("#districtFormContainer").css("-moz-column-count","3");
+            		$("#districtFormContainer").css("-webkit-column-count","3");
+            		$("#districtFormContainer").css("column-count","3");
+            		
+            		$("#dataFormContainer").css("-moz-column-count","3");
+            		$("#dataFormContainer").css("-webkit-column-count","3");
+            		$("#dataFormContainer").css("column-count","3");
+            	}
+            	if($('body').innerWidth()>=950&&$('body').innerWidth()<1340){
+            		$("#districtFormContainer").css("-moz-column-count","2");
+            		$("#districtFormContainer").css("-webkit-column-count","2");
+            		$("#districtFormContainer").css("column-count","2");
+            		
+            		$("#dataFormContainer").css("-moz-column-count","3");
+            		$("#dataFormContainer").css("-webkit-column-count","3");
+            		$("#dataFormContainer").css("column-count","3");
+            	}
+            	if($('body').innerWidth()<950){
+            		$("#districtFormContainer").css("-moz-column-count","1");
+            		$("#districtFormContainer").css("-webkit-column-count","1");
+            		$("#districtFormContainer").css("column-count","1");    
+            		
+            		$("#dataFormContainer").css("-moz-column-count","2");
+            		$("#dataFormContainer").css("-webkit-column-count","2");
+            		$("#dataFormContainer").css("column-count","2");
+            	}
+            	if($('body').innerWidth()<700){
+            		$("#dataFormContainer").css("-moz-column-count","1");
+            		$("#dataFormContainer").css("-webkit-column-count","1");
+            		$("#dataFormContainer").css("column-count","1");    
+            	}
+            	
+            }
+             
              <!--  Three js Script -->
 
             function drawDistGraph() {			
