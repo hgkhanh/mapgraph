@@ -28,7 +28,7 @@ public class StatsGet extends HttpServlet {
 	private static final String DB_DRIVER = "com.mysql.jdbc.Driver";
 	 private static final String DB_CONNECTION =	 "jdbc:mysql://localhost:3306/mapgraph";
 	 private static final String DB_USER = "root";
-	 private static final String DB_PASSWORD = "";
+	 private static final String DB_PASSWORD = "abc123";
 	// private static final String DB_CONNECTION =
 	// "jdbc:mysql://sql2.freesqldatabase.com:3306/sql24921";
 	// private static final String DB_USER = "sql24921";

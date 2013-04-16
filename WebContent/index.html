@@ -4,14 +4,13 @@
     <head>
         <meta http-equiv="content-type" content="text/html; charset=UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    	<link href="modern-responsive.css" rel="stylesheet">
+    	<link href="css/modern-responsive.css" rel="stylesheet">
         <title>3D visualization Web data statistics</title>
-        <script type="text/javascript" src="js/three.js"></script>
-        <script type="text/javascript" src="js/constants.js"></script>
-        <script type="text/javascript" src="js/Detector.js"></script>
-        <script type="text/javascript" src="js/TrackballControls.js"></script>
-        <script type="text/javascript" src="js/OrbitControls.js"></script>
-        <script type="text/javascript" src="js/stats.min.js"></script>
+        <script type="text/javascript" src="js/threejs/three.js"></script>
+        <script type="text/javascript" src="js/threejs/Detector.js"></script>
+        <script type="text/javascript" src="js/threejs/TrackballControls.js"></script>
+        <script type="text/javascript" src="js/threejs/OrbitControls.js"></script>
+        <script type="text/javascript" src="js/threejs/stats.min.js"></script>
         <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwjSVZUk7D3LgeLPHMurDHm5Z-u39IeY0&sensor=false">
             
         </script>
@@ -19,19 +18,19 @@
         <!-- modern ui lib -->
         <link rel="stylesheet" type="text/css" href="css/modern.css">
         <link href="css/modern-responsive.css" rel="stylesheet">
-        <script type="text/javascript" src="./js/jquery-1.9.1.min.js"></script>
-        <script type="text/javascript" src="./js/accordion.js"></script>
-        <script type="text/javascript" src="js/buttonset.js"></script>
-        <script type="text/javascript" src="js/calendar.js"></script>
-        <script type="text/javascript" src="js/carousel.js"></script>
-        <script type="text/javascript" src="js/dialog.js"></script>
-        <script type="text/javascript" src="js/dropdown.js"></script>
-        <script type="text/javascript" src="js/input-control.js"></script>
-        <script type="text/javascript" src="js/rating.js"></script>
-        <script type="text/javascript" src="js/slider.js"></script>
-        <script type="text/javascript" src="js/pagecontrol.js"></script>
-        <script type="text/javascript" src="js/tile-drag.js"></script>
-        <script type="text/javascript" src="js/tile-slider.js"></script>
+        <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+        <script type="text/javascript" src="js/metroui/accordion.js"></script>
+        <script type="text/javascript" src="js/metroui/buttonset.js"></script>
+        <script type="text/javascript" src="js/metroui/calendar.js"></script>
+        <script type="text/javascript" src="js/metroui/carousel.js"></script>
+        <script type="text/javascript" src="js/metroui/dialog.js"></script>
+        <script type="text/javascript" src="js/metroui/dropdown.js"></script>
+        <script type="text/javascript" src="js/metroui/input-control.js"></script>
+        <script type="text/javascript" src="js/metroui/rating.js"></script>
+        <script type="text/javascript" src="js/metroui/slider.js"></script>
+        <script type="text/javascript" src="js/metroui/pagecontrol.js"></script>
+        <script type="text/javascript" src="js/metroui/tile-drag.js"></script>
+        <script type="text/javascript" src="js/metroui/tile-slider.js"></script>
         <!-- <link rel="stylesheet" type="text/css" href="css/modern-responsive.css"> -->
         <!-- <link rel="stylesheet" type="text/css" href="css/theme-dark.css"> -->
     </head>
@@ -342,7 +341,7 @@
 
 
                 // control
-                controls = new THREE.TrackballControls(camera);
+                controls = new THREE.OrbitControls(camera);
 
                 controls.rotateSpeed = 1.0;
                 controls.zoomSpeed = 1.2;
