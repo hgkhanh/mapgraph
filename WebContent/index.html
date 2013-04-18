@@ -18,6 +18,7 @@
         <!-- modern ui lib -->
         <link rel="stylesheet" type="text/css" href="css/modern.css">
         <link href="css/modern-responsive.css" rel="stylesheet">
+		<script type='text/javascript' src='js/tween.min.js'></script>
         <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
         <script type="text/javascript" src="js/metroui/accordion.js"></script>
         <script type="text/javascript" src="js/metroui/buttonset.js"></script>
@@ -84,7 +85,7 @@
 			var BAR_WIDTH_DATATYPE = 25;
 			var BAR_HEIGHT_MULTIPLE_DATATYPE = 5;
 			var BAR_WIDTH_DATATYPE_SPACE = 1;
-            var BAR_HEIGHT_MULTIPLE = 5;
+            var BAR_HEIGHT_MULTIPLE = 10;
             var angularSpeed = 0.01; // revolutions per second
             var lastTime = 0;
             if (!Detector.webgl) Detector.addGetWebGLMessage();
@@ -482,6 +483,10 @@
                     scene.remove(group_cube[i]);
                 }
                 group_cube = [];
+				// generate a random multipler for startValue of a cube height
+				var min = 0.4;
+				var max = 1.3;
+				var startMultipler ;
                 switch (graphtype_flag) {
                     case 1:
 						console.log("drawDistGraph");
@@ -493,8 +498,10 @@
                             //console.log("checkbox is:"+$("input[type='checkbox'][value="+jsonObj.districtStats[index].district_id+"]").is(':checked'));
                             if ($("input[type='checkbox'][value=" + jsonObj.districtStats[index].district_id + "][name='dist']").is(':checked')) {
                                 latLngToCoord(jsonObj.districtStats[index].lat, jsonObj.districtStats[index].lng);
-								console.log(jsonObj.districtStats[index].data);	
-                                var geometry = new THREE.CubeGeometry(BAR_WIDTH, (jsonObj.districtStats[index].data+0.1 )* BAR_HEIGHT_MULTIPLE, BAR_WIDTH);
+								//console.log(jsonObj.districtStats[index].data);	
+								// random startMultipler
+								startMultipler= Math.random()*(max-min) + min;
+                                var geometry = new THREE.CubeGeometry(1, 1, 1);
                                 for (var i = 0; i < geometry.faces.length; i++) {
                                     geometry.faces[i].color.setHex(Math.random() * 0xffffff);
                                 }
@@ -503,9 +510,27 @@
                                     vertexColors: THREE.FaceColors
                                 });
                                 var cube = new THREE.Mesh(geometry, material);
+								cube.scale.x=BAR_WIDTH;
+								cube.scale.y=(jsonObj.districtStats[index].data+0.1 )* BAR_HEIGHT_MULTIPLE*startMultipler;
+								cube.scale.z=BAR_WIDTH;
                                 cube.position.z = -coord.y;
                                 cube.position.x = coord.x;
-                                cube.position.y = jsonObj.districtStats[index].data * BAR_HEIGHT_MULTIPLE / 2;
+                                cube.position.y = cube.scale.y/ 2;
+								// tween
+								var cubeItem = { y: (jsonObj.districtStats[index].data+0.1 )* BAR_HEIGHT_MULTIPLE*startMultipler
+								, mesh: cube };
+
+								var updateCallback = function() {									
+									this.mesh.scale.y = this.y ;
+									this.mesh.position.y = this.mesh.scale.y/2 ;
+									console.log("cube.scale.y:"+this.mesh.scale.y);
+								}
+								var tween = new TWEEN.Tween(cubeItem)
+								.to({ y: jsonObj.districtStats[index].data * BAR_HEIGHT_MULTIPLE}, 2000)
+								.delay(0)
+								.onUpdate(updateCallback)
+								.easing(TWEEN.Easing.Elastic.Out)
+								.start();
                                 group_cube.push(cube);
                                 scene.add(cube);
                             }
@@ -521,6 +546,8 @@
 							countSurveyTXT=0.1,countSurveyIMG=0.1,countSurveyAUD=0.1,countSurveyVID=0.1,curDistrict=jsonObj.dataTypeStats[index].district_id;							
                             //console.log("curDistrict:"+curDistrict);
 							latLngToCoord(jsonObj.dataTypeStats[index].lat, jsonObj.dataTypeStats[index].lng);
+							// random startMultipler
+							startMultipler= Math.random()*(max-min) + min;
 							// for each dataType item , loop thourgh each district , count & add to countSurvey
 							while (index<jsonObj.dataTypeStats.length&&curDistrict==jsonObj.dataTypeStats[index].district_id){
 								
@@ -560,7 +587,7 @@
 									//bar position
 									switch (datatype_index){
 										case 1:							
-											var geometry = new THREE.CubeGeometry(BAR_WIDTH_DATATYPE, countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE, BAR_WIDTH_DATATYPE);
+											var geometry = new THREE.CubeGeometry(1,1,1);
 											for (var i = 0; i < geometry.faces.length; i++) {
 												geometry.faces[i].color.setHex(Math.random() * 0xffffff);
 											}
@@ -568,14 +595,32 @@
 												vertexColors: THREE.FaceColors
 											});
 											var cube = new THREE.Mesh(geometry, material);
-											cube.position.z = -(coord.y-BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE);
-											cube.position.x = coord.x-BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE;
-											cube.position.y = countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE / 2;
+											cube.scale.x=BAR_WIDTH_DATATYPE;
+											cube.scale.y=countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE*startMultipler;
+											cube.scale.z=BAR_WIDTH_DATATYPE;
+											cube.position.z = -coord.y;
+											cube.position.x = coord.x;
+											cube.position.y = cube.scale.y/ 2;
+											// tween
+											var cubeItem = { y: countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE*startMultipler
+											, mesh: cube };
+
+											var updateCallback = function() {									
+												this.mesh.scale.y = this.y ;
+												this.mesh.position.y = this.mesh.scale.y/2 ;
+												console.log("cube.scale.y:"+this.mesh.scale.y);
+											}
+											var tween = new TWEEN.Tween(cubeItem)
+											.to({ y: countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE}, 2000)
+											.delay(0)
+											.onUpdate(updateCallback)
+											.easing(TWEEN.Easing.Elastic.Out)
+											.start();
 											group_cube.push(cube);
 											scene.add(cube);										
 											break;
 										case 2:
-											var geometry = new THREE.CubeGeometry(BAR_WIDTH_DATATYPE, countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE, BAR_WIDTH_DATATYPE);
+											var geometry = new THREE.CubeGeometry(1,1,1);
 											for (var i = 0; i < geometry.faces.length; i++) {
 												geometry.faces[i].color.setHex(Math.random() * 0xffffff);
 											}
@@ -583,14 +628,32 @@
 												vertexColors: THREE.FaceColors
 											});
 											var cube = new THREE.Mesh(geometry, material);
+											cube.scale.x=BAR_WIDTH_DATATYPE;
+											cube.scale.y=countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE*startMultipler;
+											cube.scale.z=BAR_WIDTH_DATATYPE;
 											cube.position.z = -(coord.y-BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE);
 											cube.position.x = coord.x+BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE;
-											cube.position.y = countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE / 2;
+											cube.position.y = cube.scale.y/ 2;
+											// tween
+											var cubeItem = { y: countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE*startMultipler
+											, mesh: cube };
+
+											var updateCallback = function() {									
+												this.mesh.scale.y = this.y ;
+												this.mesh.position.y = this.mesh.scale.y/2 ;
+												console.log("cube.scale.y:"+this.mesh.scale.y);
+											}
+											var tween = new TWEEN.Tween(cubeItem)
+											.to({ y: countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE}, 2000)
+											.delay(0)
+											.onUpdate(updateCallback)
+											.easing(TWEEN.Easing.Elastic.Out)
+											.start();
 											group_cube.push(cube);
 											scene.add(cube);
 											break;
 										case 3:
-											var geometry = new THREE.CubeGeometry(BAR_WIDTH_DATATYPE, countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE, BAR_WIDTH_DATATYPE);
+											var geometry = new THREE.CubeGeometry(1,1,1);
 											for (var i = 0; i < geometry.faces.length; i++) {
 												geometry.faces[i].color.setHex(Math.random() * 0xffffff);
 											}
@@ -598,14 +661,33 @@
 												vertexColors: THREE.FaceColors
 											});
 											var cube = new THREE.Mesh(geometry, material);
+											cube.scale.x=BAR_WIDTH_DATATYPE;
+											cube.scale.y=countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE*startMultipler;
+											cube.scale.z=BAR_WIDTH_DATATYPE;
 											cube.position.z = -(coord.y+BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE);
 											cube.position.x = coord.x-BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE;
-											cube.position.y = countSurveyAUD* BAR_HEIGHT_MULTIPLE_DATATYPE / 2;
+											
+											cube.position.y = cube.scale.y/ 2;
+											// tween
+											var cubeItem = { y: countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE*startMultipler
+											, mesh: cube };
+
+											var updateCallback = function() {									
+												this.mesh.scale.y = this.y ;
+												this.mesh.position.y = this.mesh.scale.y/2 ;
+												console.log("cube.scale.y:"+this.mesh.scale.y);
+											}
+											var tween = new TWEEN.Tween(cubeItem)
+												.to({ y: countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE}, 2000)
+												.delay(0)
+												.onUpdate(updateCallback)
+												.easing(TWEEN.Easing.Elastic.Out)
+												.start();
 											group_cube.push(cube);
 											scene.add(cube);
 											break;
 										case 4:
-											var geometry = new THREE.CubeGeometry(BAR_WIDTH_DATATYPE, countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE, BAR_WIDTH_DATATYPE);
+											var geometry = new THREE.CubeGeometry(1,1,1);
 											for (var i = 0; i < geometry.faces.length; i++) {
 												geometry.faces[i].color.setHex(Math.random() * 0xffffff);
 											}
@@ -613,9 +695,27 @@
 												vertexColors: THREE.FaceColors
 											});
 											var cube = new THREE.Mesh(geometry, material);
+											cube.scale.x=BAR_WIDTH_DATATYPE;
+											cube.scale.y=countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE*startMultipler;
+											cube.scale.z=BAR_WIDTH_DATATYPE;
 											cube.position.z = -(coord.y+BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE);
-											cube.position.x = coord.x+BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE;
-											cube.position.y = countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE / 2;
+											cube.position.x = coord.x+BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE;											
+											cube.position.y = cube.scale.y/ 2;
+											// tween
+											var cubeItem = { y: countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE*startMultipler
+											, mesh: cube };
+
+											var updateCallback = function() {									
+												this.mesh.scale.y = this.y ;
+												this.mesh.position.y = this.mesh.scale.y/2 ;
+												console.log("cube.scale.y:"+this.mesh.scale.y);
+											}
+											var tween = new TWEEN.Tween(cubeItem)
+												.to({ y: countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE}, 2000)
+												.delay(0)
+												.onUpdate(updateCallback)
+												.easing(TWEEN.Easing.Elastic.Out)
+												.start();
 											group_cube.push(cube);
 											scene.add(cube);
 											break;
@@ -640,6 +740,8 @@
 
             function animate() {
                 requestAnimationFrame(animate);
+				//tween
+				TWEEN.update();
                 // update
 
                 var date = new Date();
