@@ -598,8 +598,8 @@
 											cube.scale.x=BAR_WIDTH_DATATYPE;
 											cube.scale.y=countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE*startMultipler;
 											cube.scale.z=BAR_WIDTH_DATATYPE;
-											cube.position.z = -coord.y;
-											cube.position.x = coord.x;
+											cube.position.z = -(coord.y-BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE);
+											cube.position.x = coord.x-BAR_WIDTH_DATATYPE_SPACE*BAR_WIDTH_DATATYPE;
 											cube.position.y = cube.scale.y/ 2;
 											// tween
 											var cubeItem = { y: countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE*startMultipler
