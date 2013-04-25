@@ -26,16 +26,17 @@ public class StatsGet extends HttpServlet {
 	 * JDBC
 	 */
 	private static final String DB_DRIVER = "com.mysql.jdbc.Driver";
-	 private static final String DB_CONNECTION =	 "jdbc:mysql://localhost:3306/mapgraph";
-	 private static final String DB_USER = "root";
-	 private static final String DB_PASSWORD = "abc123";
+	private static final String DB_CONNECTION = "jdbc:mysql://localhost:3306/mapgraph";
+	private static final String DB_USER = "root";
+	private static final String DB_PASSWORD = "abc123";
 	// private static final String DB_CONNECTION =
 	// "jdbc:mysql://sql2.freesqldatabase.com:3306/sql24921";
 	// private static final String DB_USER = "sql24921";
 	// private static final String DB_PASSWORD = "wR5!bE3*";
-//	private static final String DB_CONNECTION = "jdbc:mysql://10.10.131.17:3306/mapgraph";
-//	private static final String DB_USER = "mapgraph";
-//	private static final String DB_PASSWORD = "abc123";
+	// private static final String DB_CONNECTION =
+	// "jdbc:mysql://10.10.131.17:3306/mapgraph";
+	// private static final String DB_USER = "mapgraph";
+	// private static final String DB_PASSWORD = "abc123";
 	private static Connection dbConnection = null;
 
 	// constants
@@ -88,15 +89,20 @@ public class StatsGet extends HttpServlet {
 			obj.put("fieldNames", jsonArray);
 
 			// Query survey count by district
-			System.out.println("queryDistrict");
 			jsonArray = new JSONArray();
 			ArrayList<DistrictStatsItem> countDistrict = queryDistrict();
 			for (int i = 0; i < countDistrict.size(); i++) {
 				jsonArray.add(countDistrict.get(i));
 			}
 			obj.put("districtStats", jsonArray);
-			// Query datatype stats 
-			System.out.println("queryDataTypeStats");
+			// Query survey count by street
+			jsonArray = new JSONArray();
+			ArrayList<StreetStatsItem> countStreet = queryStreet();
+			for (int i = 0; i < countStreet.size(); i++) {
+				jsonArray.add(countStreet.get(i));
+			}
+			obj.put("streetStats", jsonArray);
+			// Query datatype stats
 			jsonArray = new JSONArray();
 			ArrayList<DistrictStatsItem> resultDataTypeStats = queryDataTypeStats();
 			for (int i = 0; i < resultDataTypeStats.size(); i++) {
@@ -106,7 +112,6 @@ public class StatsGet extends HttpServlet {
 			pwriter.println(obj);
 			pwriter.flush();
 			dbConnection.close();
-			System.out.println("Resposne: " + obj.toJSONString());
 			System.out.println("dbConnection close");
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
@@ -118,15 +123,15 @@ public class StatsGet extends HttpServlet {
 			throws SQLException {
 		ArrayList<DistrictStatsItem> results = new ArrayList<DistrictStatsItem>();
 		PreparedStatement preparedStatement = null;
-		String selectDatatypeStats = "SELECT answer.district_living_id,district.latitude," +
-				"district.longitude,answer_datatype_time.datatype_id," +
-				"answer_datatype_time.time_id,count(*) as total_survey " +
-				"FROM answer_datatype_time JOIN answer " +
-				"ON answer.answer_id=answer_datatype_time.answer_id JOIN district " +
-				"ON answer.district_living_id=district.district_id " +
-				"WHERE district.latitude IS NOT NULL " +
-				"GROUP BY answer.district_living_id,answer_datatype_time.datatype_id," +
-				"answer_datatype_time.time_id;";
+		String selectDatatypeStats = "SELECT answer.district_living_id,district.latitude,"
+				+ "district.longitude,answer_datatype_time.datatype_id,"
+				+ "answer_datatype_time.time_id,count(*) as total_survey "
+				+ "FROM answer_datatype_time JOIN answer "
+				+ "ON answer.answer_id=answer_datatype_time.answer_id JOIN district "
+				+ "ON answer.district_living_id=district.district_id "
+				+ "WHERE district.latitude IS NOT NULL "
+				+ "GROUP BY answer.district_living_id,answer_datatype_time.datatype_id,"
+				+ "answer_datatype_time.time_id;";
 		try {
 			dbConnection = getDBConnection();
 			System.out.println("query datatype stats");
@@ -249,6 +254,41 @@ public class StatsGet extends HttpServlet {
 		} finally {
 			if (countDistrictStatement != null) {
 				countDistrictStatement.close();
+			}
+		}
+		return countResult;
+	}
+
+	private static ArrayList<StreetStatsItem> queryStreet() throws SQLException {
+		ArrayList<StreetStatsItem> countResult = new ArrayList<StreetStatsItem>();
+		PreparedStatement countStreetStatement = null;
+
+		String countDistrictSQL = "SELECT street_id,district_id,formatted_address," +
+				"latitude,longitude,COUNT(street_id)  AS total_survey " +
+				"FROM answer  JOIN street ON street.street_id=answer.street_living_id " +
+				"WHERE latitude IS NOT NULL GROUP BY street_id ;";
+
+
+		try {
+			System.out.println("queryStreet querying...");
+			countStreetStatement = dbConnection
+					.prepareStatement(countDistrictSQL);
+			ResultSet rs = countStreetStatement.executeQuery();
+			while (rs.next()) {
+				System.out.print(rs.getInt("street_id") + ":"
+						+ rs.getInt("total_survey") + " ");
+				countResult.add(new StreetStatsItem(rs.getInt("street_id"), rs
+						.getInt("district_id"), rs.getString("formatted_address"), rs
+						.getString("latitude"), rs.getString("longitude"), rs
+						.getInt("total_survey")));
+			}
+			System.out.println("\nqueryStreet done");
+			return countResult;
+		} catch (SQLException e) {
+			System.out.println(e.getMessage());
+		} finally {
+			if (countStreetStatement != null) {
+				countStreetStatement.close();
 			}
 		}
 		return countResult;
