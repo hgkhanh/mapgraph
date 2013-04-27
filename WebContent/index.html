@@ -78,6 +78,7 @@
                                 <input type="text">
                                 <button class="btn-clear" tabindex="-1" type="button"></button>
                             </div>	<a class="button default" onClick="drawStreetGraph()">View</a>
+							<a class="button default" onClick="zoomMap()">Zoom</a>
 
                         </div>
                     </li>
@@ -86,7 +87,13 @@
         <!-- form jquery -->
         <script type="text/javascript">
             // field showed var
-            var district_cb
+			var images_group = [];
+			var images15 = new Array();
+			var images14 = new Array();
+			var images13 = new Array();
+            var district_cb;
+			//skybox
+			var texture_placeholder;
              //init var
             var BAR_WIDTH = 30;
             var BAR_HEIGHT_MULTIPLE = 10;
@@ -117,7 +124,7 @@
                 STATIC_MAP_WIDTH = 512;
              //var PLANE_WIDTH = 2560,
              //    PLANE_HEIGHT = 2560;
-            var TILE_MULTIPLE = 7; //5x5
+            var TILE_MULTIPLE = 9; //5x5
             var coord = {
                 x: 0,
                 y: 0
@@ -131,8 +138,8 @@
             var jsonObj;
              //get map tile, calculate lat, lng of tile
             var centerPoint;
-            init_tiles();
-
+            init_tiles(zoom);
+			
              //getCorners(centerPoint,zoom,STATIC_MAP_HEIGHT,STATIC_MAP_WIDTH);
             latLngToCoord(test_lat, test_lng);
             console.log("cube pos :" + coord.x + ":" + coord.y);
@@ -235,11 +242,12 @@
                     $("input[type='checkbox'][name='dist']").prop('checked', true);
                     $("input[type='checkbox'][name='datatype']").prop('checked', true);
                     init();
+					drawMap();
                     graph();
                     animate();
                     $("input[type='checkbox']").change(function () {
-                        console.log("check change,box " + $("input[type='checkbox'][value='4'][name='dist']").get(0).name + " length:" + $("input[type='checkbox'][value='4'][name='dist']").length + " is : " + $("input[type='checkbox'][value='4']")[0].checked);
-                        console.log("check change,box " + $(this).attr("name") + " is " + $(this).is(":checked"));
+                        //console.log("check change,box " + $("input[type='checkbox'][value='4'][name='dist']").get(0).name + " length:" + $("input[type='checkbox'][value='4'][name='dist']").length + " is : " + $("input[type='checkbox'][value='4']")[0].checked);
+                        console.log("check change,box " + $(this).attr("name") + " "+ $(this).attr("value") + " is " + $(this).is(":checked"));
                         if ($("input[type='checkbox']:not(:checked)").length == 1) {
                             //console.log("1 unchecked");
                             if ($("#dist_all").is(":not(:checked)")) {
@@ -260,14 +268,14 @@
                         //}
                     });
                     $(window).resize(function () {
-                        console.log("body width:" + $('body').innerWidth());
+                        //console.log("body width:" + $('body').innerWidth());
                         responsive();
                     });
                 });
             });
 
             function responsive() {
-                console.log("body width:" + $('body').innerWidth());
+                //console.log("body width:" + $('body').innerWidth());
                 if ($('body').innerWidth() >= 1340) {
                     $("#districtFormContainer").css("-moz-column-count", "3");
                     $("#districtFormContainer").css("-webkit-column-count", "3");
@@ -304,7 +312,12 @@
             }
 
              <!--  Three js Script -->
-
+			function zoomMap(){
+				zoom=zoom+1;
+				init_tiles(zoom);
+				init();
+				drawMap();
+			}
             function drawStreetGraph() {
                 var BAR_WIDTH = 10;
                 var BAR_HEIGHT_MULTIPLE = 800;
@@ -312,11 +325,14 @@
                 camera.position.y = 100;
                 camera.position.z = 100;
                 TILE_MULTIPLE = 11;
+                
                 if (graphtype_flag != 3) {
-                    graphtype_flag = 3;
-                    init_tiles();
+					graphtype_flag = 3;
+                    init_tiles(zoom);
                 }
+				graphtype_flag = 3;
                 init();
+				drawMap();
                 graph();
                 animate();
             }
@@ -324,15 +340,18 @@
             function drawDistGraph() {
                 var BAR_WIDTH = 30;
                 var BAR_HEIGHT_MULTIPLE = 10;
-                zoom = 12;
+                zoom = 13;
                 camera.position.y = 1300;
                 camera.position.z = 1300;
                 TILE_MULTIPLE = 7;
+                
                 if (graphtype_flag == 3) {
-                    graphtype_flag = 1;
-                    init_tiles();
+					graphtype_flag = 1;
+                    init_tiles(zoom);
                 }
+                graphtype_flag = 1;
                 init();
+				drawMap();
 
                 graph();
                 animate();
@@ -341,17 +360,18 @@
             function drawDatatypeGraph() {
                 var BAR_WIDTH = 30;
                 var BAR_HEIGHT_MULTIPLE = 10;
-                zoom = 12;
+                zoom = 13;
                 camera.position.y = 1300;
                 camera.position.z = 1300;
                 TILE_MULTIPLE = 7;
-                if (graphtype_flag == 3) {
-                    graphtype_flag = 2;
-                    init_tiles();
+                graphtype_flag = 2;
+                if (graphtype_flag == 3) {   
+					graphtype_flag = 2;
+                    init_tiles(zoom);
                 }
-
+                graphtype_flag = 2;
                 init();
-
+				drawMap();
                 graph();
                 animate();
             }
@@ -368,7 +388,7 @@
                 var VIEW_ANGLE = 45,
                     ASPECT = window.innerWidth / window.innerHeight,
                     NEAR = 1,
-                    FAR = 10000;
+                    FAR = 110000;
 
                 // create a WebGL renderer, camera, and a scene
                 renderer = new THREE.WebGLRenderer({
@@ -446,7 +466,26 @@
                 spotLight.shadowCameraFar = 4000;
                 spotLight.shadowCameraFov = 30;
                 scene.add(spotLight);
-                //group
+                
+
+                container = document.getElementById('container');
+                while (container.firstChild) {
+                    container.removeChild(container.firstChild);
+                }
+                container.appendChild(renderer.domElement);
+
+                stats = new Stats();
+                stats.domElement.style.position = 'absolute';
+                stats.domElement.style.top = '0px';
+                stats.domElement.style.zIndex = 100;
+                container.appendChild(stats.domElement);
+
+                //
+
+                window.addEventListener('resize', onWindowResize, false);
+            }
+			function drawMap(){
+				//group
                 group_plane = new THREE.Object3D();
 
                 // plane
@@ -468,8 +507,8 @@
                             //map: texture
                             ,
                             overdraw: true,
-                            opacity: 0.9,
-                            transparent: true
+                            opacity: 1,
+                            transparent: false
                         });
                         //console.log(getURL(i,j));
                         plane = new THREE.Mesh(new THREE.PlaneGeometry(STATIC_MAP_WIDTH, STATIC_MAP_HEIGHT, 1, 1), material);
@@ -485,7 +524,32 @@
                 scene.add(group_plane);
                 //console.log("plan"+plane.rotation.x+":"+plane.rotation.y+":"+plane.rotation.z);		
 
+				//skybox
+				texture_placeholder = document.createElement( 'canvas' );
+				texture_placeholder.width = 128;
+				texture_placeholder.height = 128;
 
+				var context = texture_placeholder.getContext( '2d' );
+				context.fillStyle = 'rgb( 200, 200, 200 )';
+				context.fillRect( 0, 0, texture_placeholder.width, texture_placeholder.height );
+				var materials = [
+
+					loadTexture( 'skybox/skyrender0002.jpg' ), // right
+					loadTexture( 'skybox/skyrender0005.jpg' ), // left
+					loadTexture( 'skybox/skyrender0003.jpg' ), // top
+					loadTexture( 'skybox/skyrender0006.jpg' ), // bottom
+					loadTexture( 'skybox/skyrender0001.jpg' ), // back
+					loadTexture( 'skybox/skyrender0004.jpg' )  // front
+
+				];
+
+				var skybox = new THREE.Mesh( new THREE.CubeGeometry( 100000, 100000, 100000, 1, 1, 1 ), new THREE.MeshFaceMaterial( materials ) );
+				skybox.scale.x = - 1;
+				skybox.position.y=0;
+				skybox.flipSided = true;
+				skybox.frustumCulled  = true;
+				skybox.rotation.y=180;
+				scene.add( skybox );
                 //Axes
                 //var axes = new THREE.AxisHelper();
                 //axes.scale.set( 100, 100, 100 );
@@ -496,24 +560,7 @@
                 //renderer.setClearColor(0x000);
                 //renderer.setSize(WIDTH, HEIGHT);
 
-
-                container = document.getElementById('container');
-                while (container.firstChild) {
-                    container.removeChild(container.firstChild);
-                }
-                container.appendChild(renderer.domElement);
-
-                stats = new Stats();
-                stats.domElement.style.position = 'absolute';
-                stats.domElement.style.top = '0px';
-                stats.domElement.style.zIndex = 100;
-                container.appendChild(stats.domElement);
-
-                //
-
-                window.addEventListener('resize', onWindowResize, false);
-            }
-
+			}
             function onWindowResize() {
 
                 camera.aspect = window.innerWidth / window.innerHeight;
@@ -601,7 +648,7 @@
                     //loop thourgh dataTypeStats Item
                     for (var index = 0; index < jsonObj.dataTypeStats.length; index++) {
                         countSurveyTXT = 0.1, countSurveyIMG = 0.1, countSurveyAUD = 0.1, countSurveyVID = 0.1, curDistrict = jsonObj.dataTypeStats[index].district_id;
-                        //console.log("curDistrict:"+curDistrict);
+                        
                         latLngToCoord(jsonObj.dataTypeStats[index].lat, jsonObj.dataTypeStats[index].lng);
                         // random startMultipler
                         startMultipler = Math.random() * (max - min) + min;
@@ -638,10 +685,15 @@
                             index++;
                         }
 
-                        // draw only checked_datatype
+                        
                         for (var datatype_index = 1; datatype_index <= 4; datatype_index++) {
-                            if ($("input[type='checkbox'][value=" + datatype_index + "][name='datatype']").is(':checked')) {
-                                //bar position
+							// draw only checked_datatype and checked_district
+                            if ($("input[type='checkbox'][value=" + datatype_index + "][name='datatype']").is(':checked')
+							&&$("input[type='checkbox'][value=" + jsonObj.dataTypeStats[index-1].district_id + "][name='dist']").is(':checked')) {
+                                //console.log("curDistrict:"+curDistrict);
+								//console.log("jsonObj.dataTypeStats[index-1].district_id :"+jsonObj.dataTypeStats[index-1].district_id );
+								//bar position
+								
                                 switch (datatype_index) {
                                 case 1:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
@@ -667,7 +719,7 @@
                                     var updateCallback = function () {
                                         this.mesh.scale.y = this.y;
                                         this.mesh.position.y = this.mesh.scale.y / 2;
-                                        console.log("cube.scale.y:" + this.mesh.scale.y);
+                                        //console.log("cube.scale.y:" + this.mesh.scale.y);
                                     }
                                     var tween = new TWEEN.Tween(cubeItem)
                                         .to({
@@ -741,7 +793,7 @@
                                     var updateCallback = function () {
                                         this.mesh.scale.y = this.y;
                                         this.mesh.position.y = this.mesh.scale.y / 2;
-                                        console.log("cube.scale.y:" + this.mesh.scale.y);
+                                        //console.log("cube.scale.y:" + this.mesh.scale.y);
                                     }
                                     var tween = new TWEEN.Tween(cubeItem)
                                         .to({
@@ -778,7 +830,7 @@
                                     var updateCallback = function () {
                                         this.mesh.scale.y = this.y;
                                         this.mesh.position.y = this.mesh.scale.y / 2;
-                                        console.log("cube.scale.y:" + this.mesh.scale.y);
+                                        //console.log("cube.scale.y:" + this.mesh.scale.y);
                                     }
                                     var tween = new TWEEN.Tween(cubeItem)
                                         .to({
@@ -869,8 +921,12 @@
                 requestAnimationFrame(animate);
                 //tween
                 TWEEN.update();
+				//camera
+				if(camera.position.y<30){
+					camera.position.y=40;
+				}
                 // update
-
+		
                 var date = new Date();
                 var time = date.getTime();
                 var timeDiff = time - lastTime;
@@ -916,10 +972,30 @@
                 NELatLng = proj.fromPointToLatLng(NEPoint);
                 //console.log(' NE: '+ NELatLng);
             }
+			
+			//skybox
+			function loadTexture( path ) {
 
+				var texture = new THREE.Texture( texture_placeholder );
+				var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: true } );
+
+				var image = new Image();
+				image.onload = function () {
+
+					texture.needsUpdate = true;
+					material.map.image = this;
+
+					render();
+
+				};
+				image.src = path;
+
+				return material;
+
+			}
              //get map tile, calculate lat, lng of tile
 
-            function init_tiles() {
+            function init_tiles(zoom) {
                 //proj = new MercatorProjection();
                 G = google.maps;
                 // get x y of the tile in selected lat-lng	
