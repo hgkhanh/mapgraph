@@ -28,7 +28,7 @@ public class StatsGet extends HttpServlet {
 	private static final String DB_DRIVER = "com.mysql.jdbc.Driver";
 	private static final String DB_CONNECTION = "jdbc:mysql://localhost:3306/mapgraph";
 	private static final String DB_USER = "root";
-	private static final String DB_PASSWORD = "";
+	private static final String DB_PASSWORD = "abc123";
 	// private static final String DB_CONNECTION =
 	// "jdbc:mysql://sql2.freesqldatabase.com:3306/sql24921";
 	// private static final String DB_USER = "sql24921";
@@ -259,29 +259,65 @@ public class StatsGet extends HttpServlet {
 		return countResult;
 	}
 
+	// Query Database to get Street Statistic
 	private static ArrayList<StreetStatsItem> queryStreet() throws SQLException {
 		ArrayList<StreetStatsItem> countResult = new ArrayList<StreetStatsItem>();
 		PreparedStatement countStreetStatement = null;
+		PreparedStatement countDatatypeStreetStatement = null;
 
-		String countDistrictSQL = "SELECT street_id,district_id,formatted_address," +
-				"latitude,longitude,COUNT(street_id)  AS total_survey " +
-				"FROM answer  JOIN street ON street.street_id=answer.street_living_id " +
-				"WHERE latitude IS NOT NULL GROUP BY street_id ;";
+		String countStreetSQL = "SELECT street_id,district_id,formatted_address,"
+				+ "latitude,longitude,COUNT(street_id)  AS total_survey "
+				+ "FROM answer  JOIN street ON street.street_id=answer.street_living_id "
+				+ "WHERE latitude IS NOT NULL GROUP BY street_id ;";
 
+		String countDatatypeStreetSQL = "SELECT street_living_id,age_id,gender," +
+				"district_living_id,job_id,datatype_id,time_id,COUNT(*) AS count " +
+				"FROM answer JOIN answer_datatype_time ON " +
+				"answer.answer_id=answer_datatype_time.answer_id " +
+				"WHERE answer.street_living_id IS NOT NULL " +
+				"GROUP BY street_living_id,datatype_id,time_id;";
 
 		try {
 			System.out.println("queryStreet querying...");
 			countStreetStatement = dbConnection
-					.prepareStatement(countDistrictSQL);
+					.prepareStatement(countStreetSQL);
+			countDatatypeStreetStatement = dbConnection
+					.prepareStatement(countDatatypeStreetSQL);
+			// read from db (datatype_time not read)
 			ResultSet rs = countStreetStatement.executeQuery();
 			while (rs.next()) {
-				System.out.print(rs.getInt("street_id") + ":"
-						+ rs.getInt("total_survey") + " ");
+				System.out.print("\nstreet_id" + ":" + rs.getInt("street_id")
+						+ " total_survey" + ":" + rs.getInt("total_survey")
+						+ " ");
 				countResult.add(new StreetStatsItem(rs.getInt("street_id"), rs
-						.getInt("district_id"), rs.getString("formatted_address"), rs
+						.getInt("district_id"), rs
+						.getString("formatted_address"), rs
 						.getString("latitude"), rs.getString("longitude"), rs
 						.getInt("total_survey")));
 			}
+
+			// read datatype_time
+			rs = countDatatypeStreetStatement.executeQuery();
+			while (rs.next()) {
+				System.out.print("\nstreet_id" + ":" + rs.getInt("street_living_id")
+						+ " datatype_id" + ":" + rs.getInt("datatype_id")
+						+ " time_id" + ":" + rs.getInt("time_id") + " count"
+						+ ":" + rs.getInt("count"));
+				// loop through countResult to find item w/ that street_id
+				for (int i = 0; i < countResult.size(); i++) {
+					if (countResult.get(i).getStreet_id() == rs
+							.getInt("street_living_id")) {
+						System.out.print("street_id:"+rs.getInt("street_living_id")+" matched!");
+						// if found, insert count data at corresponding position
+						// in the Datatype_count Array
+						countResult.get(i).insertDatatype_countAt(
+								rs.getInt("datatype_id"), rs.getInt("time_id"),
+								rs.getInt("count"));
+					}
+				}
+
+			}
+
 			System.out.println("\nqueryStreet done");
 			return countResult;
 		} catch (SQLException e) {
@@ -294,45 +330,45 @@ public class StatsGet extends HttpServlet {
 		return countResult;
 	}
 
-	private static String queryName(String district_id, String cat_id)
-			throws SQLException {
-		PreparedStatement preparedStatement = null;
-		String result = "";
-		String selectDistrict = "SELECT * FROM DISTRICT WHERE DISTRICT_ID = ?";
-		String selectCategory = "SELECT * FROM CATEGORY WHERE CATEGORY_ID = ?";
-		try {
-			System.out.println("queryName getDBConnection");
-			// selectDistrict SQL stetement
-			preparedStatement = dbConnection.prepareStatement(selectDistrict);
-			preparedStatement.setInt(1, Integer.parseInt(district_id));
-			ResultSet rs = preparedStatement.executeQuery();
-			while (rs.next()) {
-				String id = rs.getString("DISTRICT_ID");
-				String name = rs.getString("NAME");
-				result = id + ":" + name + "\n";
-			}
-			System.out.println("queryName read all name");
-			// selectCategory SQL stetement
-			preparedStatement = dbConnection.prepareStatement(selectCategory);
-			preparedStatement.setInt(1, Integer.parseInt(cat_id));
-			rs = preparedStatement.executeQuery();
-			while (rs.next()) {
-				String id = rs.getString("CATEGORY_ID");
-				String name = rs.getString("NAME");
-				result += id + ":" + name;
-			}
-		} catch (SQLException e) {
-
-			System.out.println(e.getMessage());
-
-		} finally {
-
-			if (preparedStatement != null) {
-				preparedStatement.close();
-			}
-		}
-		return result;
-	}
+	// private static String queryName(String district_id, String cat_id)
+	// throws SQLException {
+	// PreparedStatement preparedStatement = null;
+	// String result = "";
+	// String selectDistrict = "SELECT * FROM DISTRICT WHERE DISTRICT_ID = ?";
+	// String selectCategory = "SELECT * FROM CATEGORY WHERE CATEGORY_ID = ?";
+	// try {
+	// System.out.println("queryName getDBConnection");
+	// // selectDistrict SQL stetement
+	// preparedStatement = dbConnection.prepareStatement(selectDistrict);
+	// preparedStatement.setInt(1, Integer.parseInt(district_id));
+	// ResultSet rs = preparedStatement.executeQuery();
+	// while (rs.next()) {
+	// String id = rs.getString("DISTRICT_ID");
+	// String name = rs.getString("NAME");
+	// result = id + ":" + name + "\n";
+	// }
+	// System.out.println("queryName read all name");
+	// // selectCategory SQL stetement
+	// preparedStatement = dbConnection.prepareStatement(selectCategory);
+	// preparedStatement.setInt(1, Integer.parseInt(cat_id));
+	// rs = preparedStatement.executeQuery();
+	// while (rs.next()) {
+	// String id = rs.getString("CATEGORY_ID");
+	// String name = rs.getString("NAME");
+	// result += id + ":" + name;
+	// }
+	// } catch (SQLException e) {
+	//
+	// System.out.println(e.getMessage());
+	//
+	// } finally {
+	//
+	// if (preparedStatement != null) {
+	// preparedStatement.close();
+	// }
+	// }
+	// return result;
+	// }
 
 	private static Connection getDBConnection() {
 		System.out.println("DB connecting...");

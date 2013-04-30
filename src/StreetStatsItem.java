@@ -1,5 +1,7 @@
 /* Result of a District Statistics query
  * */
+import java.util.Arrays;
+
 import org.json.simple.JSONAware;
 import org.json.simple.JSONObject;
 
@@ -10,8 +12,7 @@ public class StreetStatsItem implements JSONAware {
 	private String lat;
 	private String lng;	
 	private int count;
-
-
+	private int datatype_count [][];
 
 	public StreetStatsItem(int street_id, int district_id, String address,
 			String lat, String lng, int count) {
@@ -22,6 +23,19 @@ public class StreetStatsItem implements JSONAware {
 		this.lat = lat;
 		this.lng = lng;
 		this.count = count;
+		this.datatype_count= new int[4][11];
+	}
+
+	public StreetStatsItem(int street_id, int district_id, String address,
+			String lat, String lng, int count,int datatype_count[][]) {
+		super();
+		this.street_id = street_id;
+		this.district_id = district_id;
+		this.fomatted_address = address;
+		this.lat = lat;
+		this.lng = lng;
+		this.count = count;
+		this.datatype_count=datatype_count;
 	}
 
 
@@ -85,6 +99,28 @@ public class StreetStatsItem implements JSONAware {
 	}
 
 
+	public String getFomatted_address() {
+		return fomatted_address;
+	}
+
+
+	public void setFomatted_address(String fomatted_address) {
+		this.fomatted_address = fomatted_address;
+	}
+
+
+	public int[][] getDatatype_count() {
+		return datatype_count;
+	}
+
+
+	public void setDatatype_count(int[][] datatype_count) {
+		this.datatype_count = datatype_count;
+	}
+	
+	public void insertDatatype_countAt(int datatype_id,int time_id,int count){
+		this.datatype_count[datatype_id-1][time_id-1]=count;
+	}
 	public String toJSONString() {
 		JSONObject obj = new JSONObject();
 		obj.put("street_id", street_id);
@@ -93,6 +129,7 @@ public class StreetStatsItem implements JSONAware {
 		obj.put("count", count);
 		obj.put("lat", lat);
 		obj.put("lng", lng);
+		obj.put("datatype_count", Arrays.deepToString(datatype_count));
 		return obj.toString();
 	}
 

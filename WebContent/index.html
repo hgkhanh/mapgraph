@@ -78,7 +78,7 @@
                                 <input type="text">
                                 <button class="btn-clear" tabindex="-1" type="button"></button>
                             </div>	<a class="button default" onClick="drawStreetGraph()">View</a>
-							<a class="button default" onClick="zoomMap()">Zoom</a>
+	<a class="button default" onClick="zoomMap()">Zoom</a>
 
                         </div>
                     </li>
@@ -87,19 +87,21 @@
         <!-- form jquery -->
         <script type="text/javascript">
             // field showed var
-			var images_group = [];
-			var images15 = new Array();
-			var images14 = new Array();
-			var images13 = new Array();
+            var images_group = [];
+            var images15 = new Array();
+            var images14 = new Array();
+            var images13 = new Array();
             var district_cb;
-			//skybox
-			var texture_placeholder;
+             //skybox
+            var texture_placeholder;
              //init var
+            var ZOOM_MIN = 15;
             var BAR_WIDTH = 30;
             var BAR_HEIGHT_MULTIPLE = 10;
             var BAR_WIDTH_DATATYPE = 25;
             var BAR_HEIGHT_MULTIPLE_DATATYPE = 5;
             var BAR_WIDTH_DATATYPE_SPACE = 1;
+            var BAR_WIDTH_MULTIPLE = 1;
             var angularSpeed = 0.01; // revolutions per second
             var lastTime = 0;
             if (!Detector.webgl) Detector.addGetWebGLMessage();
@@ -139,7 +141,7 @@
              //get map tile, calculate lat, lng of tile
             var centerPoint;
             init_tiles(zoom);
-			
+
              //getCorners(centerPoint,zoom,STATIC_MAP_HEIGHT,STATIC_MAP_WIDTH);
             latLngToCoord(test_lat, test_lng);
             console.log("cube pos :" + coord.x + ":" + coord.y);
@@ -240,14 +242,15 @@
                     $("#datatype_col").append("<br/>");
                     $("#datatype_col").append("<br/>");
                     $("input[type='checkbox'][name='dist']").prop('checked', true);
+                    $("input[type='checkbox'][name='time']").prop('checked', true);
                     $("input[type='checkbox'][name='datatype']").prop('checked', true);
                     init();
-					drawMap();
+                    drawMap();
                     graph();
                     animate();
                     $("input[type='checkbox']").change(function () {
                         //console.log("check change,box " + $("input[type='checkbox'][value='4'][name='dist']").get(0).name + " length:" + $("input[type='checkbox'][value='4'][name='dist']").length + " is : " + $("input[type='checkbox'][value='4']")[0].checked);
-                        console.log("check change,box " + $(this).attr("name") + " "+ $(this).attr("value") + " is " + $(this).is(":checked"));
+                        console.log("check change,box " + $(this).attr("name") + " " + $(this).attr("value") + " is " + $(this).is(":checked"));
                         if ($("input[type='checkbox']:not(:checked)").length == 1) {
                             //console.log("1 unchecked");
                             if ($("#dist_all").is(":not(:checked)")) {
@@ -312,72 +315,99 @@
             }
 
              <!--  Three js Script -->
-			function zoomMap(){
-				zoom=zoom+1;
-				init_tiles(zoom);
-				init();
-				drawMap();
-			}
+
+            function zoomMap() {
+                zoom = zoom + 1;
+                init_tiles(zoom);
+                init();
+                drawMap();
+            }
+
             function drawStreetGraph() {
-                var BAR_WIDTH = 10;
-                var BAR_HEIGHT_MULTIPLE = 800;
+                BAR_WIDTH = 10;
+                BAR_HEIGHT_MULTIPLE_DATATYPE = 20;
                 zoom = 15;
+                switch (zoom) {
+                case 13:
+                    BAR_WIDTH_MULTIPLE = 1;
+                case 14:
+                    BAR_WIDTH_MULTIPLE = 0.8;
+                case 15:
+                    BAR_WIDTH_MULTIPLE = 0.6;
+                };
                 camera.position.y = 100;
                 camera.position.z = 100;
                 TILE_MULTIPLE = 11;
-                
+
                 if (graphtype_flag != 3) {
-					graphtype_flag = 3;
+                    graphtype_flag = 3;
                     init_tiles(zoom);
                 }
-				graphtype_flag = 3;
+                graphtype_flag = 3;
                 init();
-				drawMap();
+                drawMap();
                 graph();
                 animate();
             }
 
             function drawDistGraph() {
-                var BAR_WIDTH = 30;
-                var BAR_HEIGHT_MULTIPLE = 10;
+                BAR_WIDTH = 30;
+                BAR_HEIGHT_MULTIPLE_DATATYPE = 10;
                 zoom = 13;
+                switch (zoom) {
+                case 13:
+                    BAR_WIDTH_MULTIPLE = 1;
+                case 14:
+                    BAR_WIDTH_MULTIPLE = 0.8;
+                case 15:
+                    BAR_WIDTH_MULTIPLE = 0.6;
+                };
                 camera.position.y = 1300;
                 camera.position.z = 1300;
-                TILE_MULTIPLE = 7;
-                
+                TILE_MULTIPLE = 11;
+
                 if (graphtype_flag == 3) {
-					graphtype_flag = 1;
+                    graphtype_flag = 1;
                     init_tiles(zoom);
                 }
                 graphtype_flag = 1;
                 init();
-				drawMap();
+                drawMap();
 
                 graph();
                 animate();
             }
 
             function drawDatatypeGraph() {
-                var BAR_WIDTH = 30;
-                var BAR_HEIGHT_MULTIPLE = 10;
+                BAR_WIDTH = 30;
+                BAR_HEIGHT_MULTIPLE_DATATYPE = 10;
                 zoom = 13;
+                switch (zoom) {
+                case 13:
+                    BAR_WIDTH_MULTIPLE = 1;
+                case 14:
+                    BAR_WIDTH_MULTIPLE = 0.8;
+                case 15:
+                    BAR_WIDTH_MULTIPLE = 0.6;
+                };
                 camera.position.y = 1300;
                 camera.position.z = 1300;
-                TILE_MULTIPLE = 7;
+                TILE_MULTIPLE = 11;
                 graphtype_flag = 2;
-                if (graphtype_flag == 3) {   
-					graphtype_flag = 2;
+                if (graphtype_flag == 3) {
+                    graphtype_flag = 2;
                     init_tiles(zoom);
                 }
                 graphtype_flag = 2;
                 init();
-				drawMap();
+                drawMap();
                 graph();
                 animate();
             }
             /*  SERVLET CALL */
              // Set up the three.js scene. This is the most basic setup without
              // any special stuff
+
             function init() {
                 console.log("init :" + graphtype_flag);
                 // set the scene size
@@ -466,7 +496,7 @@
                 spotLight.shadowCameraFar = 4000;
                 spotLight.shadowCameraFov = 30;
                 scene.add(spotLight);
-                
+
 
                 container = document.getElementById('container');
                 while (container.firstChild) {
@@ -484,10 +514,24 @@
 
                 window.addEventListener('resize', onWindowResize, false);
             }
-			function drawMap(){
-				//group
+
+            function drawMap() {
+                //group
                 group_plane = new THREE.Object3D();
 
+                // big/base  plane 
+                // material
+                plane = new THREE.Mesh(new THREE.PlaneGeometry(15000, 15000), new THREE.MeshLambertMaterial({
+                    transparent: true,
+                    opacity: 0.3,
+                    side: THREE.DoubleSide,
+                    blending: THREE.AdditiveAlpha,
+                    color: 0xffffff
+                }));
+                plane.position.y = -10;
+                plane.rotation.x = -Math.PI / 2;
+                plane.rotation.z = Math.PI / 4 + Math.PI / 24;
+                group_plane.add(plane);
                 // plane
                 for (var i = -(TILE_MULTIPLE - 1) / 2; i <= (TILE_MULTIPLE - 1) / 2; i++) {
                     for (var j = -(TILE_MULTIPLE - 1) / 2; j <= (TILE_MULTIPLE - 1) / 2; j++) {
@@ -524,32 +568,32 @@
                 scene.add(group_plane);
                 //console.log("plan"+plane.rotation.x+":"+plane.rotation.y+":"+plane.rotation.z);		
 
-				//skybox
-				texture_placeholder = document.createElement( 'canvas' );
-				texture_placeholder.width = 128;
-				texture_placeholder.height = 128;
+                //skybox
+                texture_placeholder = document.createElement('canvas');
+                texture_placeholder.width = 128;
+                texture_placeholder.height = 128;
 
-				var context = texture_placeholder.getContext( '2d' );
-				context.fillStyle = 'rgb( 200, 200, 200 )';
-				context.fillRect( 0, 0, texture_placeholder.width, texture_placeholder.height );
-				var materials = [
+                var context = texture_placeholder.getContext('2d');
+                context.fillStyle = 'rgb( 200, 200, 200 )';
+                context.fillRect(0, 0, texture_placeholder.width, texture_placeholder.height);
+                var materials = [
 
-					loadTexture( 'skybox/skyrender0002.jpg' ), // right
-					loadTexture( 'skybox/skyrender0005.jpg' ), // left
-					loadTexture( 'skybox/skyrender0003.jpg' ), // top
-					loadTexture( 'skybox/skyrender0006.jpg' ), // bottom
-					loadTexture( 'skybox/skyrender0001.jpg' ), // back
-					loadTexture( 'skybox/skyrender0004.jpg' )  // front
+                    loadTexture('skybox/skyrender0002.jpg'), // right
+                    loadTexture('skybox/skyrender0005.jpg'), // left
+                    loadTexture('skybox/skyrender0003.jpg'), // top
+                    loadTexture('skybox/skyrender0006.jpg'), // bottom
+                    loadTexture('skybox/skyrender0001.jpg'), // back
+                    loadTexture('skybox/skyrender0004.jpg') // front
 
-				];
+                ];
 
-				var skybox = new THREE.Mesh( new THREE.CubeGeometry( 100000, 100000, 100000, 1, 1, 1 ), new THREE.MeshFaceMaterial( materials ) );
-				skybox.scale.x = - 1;
-				skybox.position.y=0;
-				skybox.flipSided = true;
-				skybox.frustumCulled  = true;
-				skybox.rotation.y=180;
-				scene.add( skybox );
+                var skybox = new THREE.Mesh(new THREE.CubeGeometry(15000, 15000, 15000, 1, 1, 1), new THREE.MeshFaceMaterial(materials));
+                skybox.scale.x = -1;
+                skybox.position.y = -100;
+                skybox.flipSided = true;
+                skybox.frustumCulled = true;
+                skybox.rotation.y = 180;
+                scene.add(skybox);
                 //Axes
                 //var axes = new THREE.AxisHelper();
                 //axes.scale.set( 100, 100, 100 );
@@ -560,7 +604,8 @@
                 //renderer.setClearColor(0x000);
                 //renderer.setSize(WIDTH, HEIGHT);
 
-			}
+            }
+
             function onWindowResize() {
 
                 camera.aspect = window.innerWidth / window.innerHeight;
@@ -580,14 +625,15 @@
                     scene.remove(group_cube[i]);
                 }
                 group_cube = [];
-                // generate a random multipler for startValue of a cube height
+                // generate a random multipler for startValue of a cube height when starting tweening
                 var min = 0.4;
                 var max = 1.3;
                 var startMultipler;
                 switch (graphtype_flag) {
                 case 1:
                     console.log("drawDistGraph");
-                    console.log("data:");
+                    //console.log(jsonObj.streetStats[jsonObj.streetStats.length-1].datatype_count[jsonObj.streetStats[jsonObj.streetStats.length-1].datatype_count.length-1]);
+
                     // draw district graph
                     for (var index = 0; index < jsonObj.districtStats.length; index++) {
 
@@ -648,7 +694,7 @@
                     //loop thourgh dataTypeStats Item
                     for (var index = 0; index < jsonObj.dataTypeStats.length; index++) {
                         countSurveyTXT = 0.1, countSurveyIMG = 0.1, countSurveyAUD = 0.1, countSurveyVID = 0.1, curDistrict = jsonObj.dataTypeStats[index].district_id;
-                        
+
                         latLngToCoord(jsonObj.dataTypeStats[index].lat, jsonObj.dataTypeStats[index].lng);
                         // random startMultipler
                         startMultipler = Math.random() * (max - min) + min;
@@ -685,15 +731,14 @@
                             index++;
                         }
 
-                        
+
                         for (var datatype_index = 1; datatype_index <= 4; datatype_index++) {
-							// draw only checked_datatype and checked_district
-                            if ($("input[type='checkbox'][value=" + datatype_index + "][name='datatype']").is(':checked')
-							&&$("input[type='checkbox'][value=" + jsonObj.dataTypeStats[index-1].district_id + "][name='dist']").is(':checked')) {
+                            // draw only checked_datatype and checked_district
+                            if ($("input[type='checkbox'][value=" + datatype_index + "][name='datatype']").is(':checked') && $("input[type='checkbox'][value=" + jsonObj.dataTypeStats[index - 1].district_id + "][name='dist']").is(':checked')) {
                                 //console.log("curDistrict:"+curDistrict);
-								//console.log("jsonObj.dataTypeStats[index-1].district_id :"+jsonObj.dataTypeStats[index-1].district_id );
-								//bar position
-								
+                                //console.log("jsonObj.dataTypeStats[index-1].district_id :"+jsonObj.dataTypeStats[index-1].district_id );
+                                //bar position
+
                                 switch (datatype_index) {
                                 case 1:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
@@ -704,11 +749,11 @@
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
-                                    cube.scale.x = BAR_WIDTH_DATATYPE;
+                                    cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.scale.y = countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
-                                    cube.scale.z = BAR_WIDTH_DATATYPE;
-                                    cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE);
-                                    cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE;
+                                    cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
+                                    cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
                                     // tween
                                     var cubeItem = {
@@ -741,11 +786,11 @@
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
-                                    cube.scale.x = BAR_WIDTH_DATATYPE;
+                                    cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.scale.y = countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
-                                    cube.scale.z = BAR_WIDTH_DATATYPE;
-                                    cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE);
-                                    cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE;
+                                    cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
+                                    cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
                                     // tween
                                     var cubeItem = {
@@ -777,11 +822,11 @@
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
-                                    cube.scale.x = BAR_WIDTH_DATATYPE;
+                                    cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.scale.y = countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
-                                    cube.scale.z = BAR_WIDTH_DATATYPE;
-                                    cube.position.z = -(coord.y + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE);
-                                    cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE;
+                                    cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.position.z = -(coord.y + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
+                                    cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
 
                                     cube.position.y = cube.scale.y / 2;
                                     // tween
@@ -815,11 +860,11 @@
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
-                                    cube.scale.x = BAR_WIDTH_DATATYPE;
+                                    cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.scale.y = countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
-                                    cube.scale.z = BAR_WIDTH_DATATYPE;
-                                    cube.position.z = -(coord.y + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE);
-                                    cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE;
+                                    cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.position.z = -(coord.y + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
+                                    cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
                                     // tween
                                     var cubeItem = {
@@ -858,75 +903,236 @@
                     break;
                 case 3:
                     console.log("drawStreetGraph");
-                    //console.log("data:");	
                     // draw district graph
+                    // draw datatype stats graph
+                    //loop thourgh dataTypeStats Item
                     for (var index = 0; index < jsonObj.streetStats.length; index++) {
-                        //console.log("district_id:"+jsonObj.districtStats[index].district_id);
-                        //console.log("checkbox is:"+$("input[type='checkbox'][value="+jsonObj.districtStats[index].district_id+"]").is(':checked'));
-                        //console.log("streetStats[index].lat :" + jsonObj.streetStats[index].lat);
-                        //console.log("streetStats[index].lng :" + jsonObj.streetStats[index].lng);
-                        //console.log("streetStats[index].count :" + jsonObj.streetStats[index].count);
-                        //console.log("streetStats[index].district_id :" + jsonObj.streetStats[index].district_id);
-                        if ($("input[type='checkbox'][value=" + jsonObj.streetStats[index].district_id + "][name='dist']").is(':checked')) {
+                        var countSurveyTXT = 0,
+                            countSurveyIMG = 0,
+                            countSurveyAUD = 0,
+                            countSurveyVID = 0,
+                            curStreet;
+                        countSurveyTXT = 0.1, countSurveyIMG = 0.1, countSurveyAUD = 0.1, countSurveyVID = 0.1, curStreet = jsonObj.streetStats[index].street_id;
+                        var datatypejsonObj = eval(jsonObj.streetStats[index].datatype_count);
+                        latLngToCoord(jsonObj.streetStats[index].lat, jsonObj.streetStats[index].lng);
+                        // random startMultipler
+                        startMultipler = Math.random() * (max - min) + min;
+                        // for each dataType item , loop thourgh each district , count & add to countSurvey
 
-                            latLngToCoord(jsonObj.streetStats[index].lat, jsonObj.streetStats[index].lng);
-                            //console.log(jsonObj.districtStats[index].data);	
-                            // random startMultipler
-                            startMultipler = Math.random() * (max - min) + min;
-                            var geometry = new THREE.CubeGeometry(1, 1, 1);
-                            for (var i = 0; i < geometry.faces.length; i++) {
-                                geometry.faces[i].color.setHex(Math.random() * 0xffffff);
-                            }
-                            var material = new THREE.MeshBasicMaterial({
-                                vertexColors: THREE.FaceColors
-                            });
-                            var cube = new THREE.Mesh(geometry, material);
-                            cube.scale.x = BAR_WIDTH;
-                            cube.scale.y = (jsonObj.streetStats[index].count + 0.1) * BAR_HEIGHT_MULTIPLE * startMultipler;
-                            cube.scale.z = BAR_WIDTH;
-                            cube.position.z = -coord.y;
-                            cube.position.x = coord.x;
-                            cube.position.y = cube.scale.y / 2;
-                            // tween
-                            var cubeItem = {
-                                y: (jsonObj.streetStats[index].count + 0.1) * BAR_HEIGHT_MULTIPLE * startMultipler,
-                                mesh: cube
-                            };
+                        for (var i = 0; i < datatypejsonObj.length; i++) {
+                            for (var j = 0; j < datatypejsonObj[0].length; j++) {
+                                // if its time-checkbox is checked , count that data
+                                if ($("input[type='checkbox'][value=" + j + "][name='time']").is(':checked')) { // count only checked_time 
+                                    //console.log("index:"+index);
+                                    //console.log("jsonObj.dataTypeStats[index].datatype:"+jsonObj.dataTypeStats[index].datatype_id);
+                                    //if(jsonObj.dataTypeStats[index].datatype_id==1){
+                                    //	countSurveyTXT++;
+                                    //}
+                                    //console.log("datatypejsonObj[" + i + "][" + j + "].count" + datatypejsonObj[i][j]);
+                                    switch (i) {
+                                    case 0:
+                                        countSurveyTXT += datatypejsonObj[i][j];
+                                        break;
+                                    case 1:
+                                        countSurveyIMG += datatypejsonObj[i][j];
+                                        break;
+                                    case 2:
+                                        countSurveyAUD += datatypejsonObj[i][j];
+                                        break;
+                                    case 3:
+                                        countSurveyVID += datatypejsonObj[i][j];
+                                        break;
+                                    default:
+                                        console.log(datatypejsonObj[i][j]);
+                                        break;
+                                    }
 
-                            var updateCallback = function () {
-                                this.mesh.scale.y = this.y;
-                                this.mesh.position.y = this.mesh.scale.y / 2;
+                                }
                             }
-                            var tween = new TWEEN.Tween(cubeItem)
-                                .to({
-                                y: jsonObj.streetStats[index].count * BAR_HEIGHT_MULTIPLE
-                            }, 2000)
-                                .delay(0)
-                                .onUpdate(updateCallback)
-                                .easing(TWEEN.Easing.Elastic.Out)
-                                .start();
-                            group_cube.push(cube);
-                            scene.add(cube);
+
                         }
 
+                        for (var datatype_index = 1; datatype_index <= 4; datatype_index++) {
+
+                            // draw only checked_datatype & checked_district & inside map
+                            if ($("input[type='checkbox'][value=" + datatype_index + "][name='datatype']").is(':checked') && $("input[type='checkbox'][value=" + jsonObj.streetStats[index].district_id + "][name='dist']").is(':checked')
+							&&Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2) {
+                               
+                                //console.log("jsonObj.dataTypeStats[index-1].district_id :"+jsonObj.dataTypeStats[index-1].district_id );
+                                //bar position
+                                switch (datatype_index) {
+                                case 1:
+                                    var geometry = new THREE.CubeGeometry(1, 1, 1);
+                                    for (var i = 0; i < geometry.faces.length; i++) {
+                                        geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+                                    }
+                                    var material = new THREE.MeshBasicMaterial({
+                                        vertexColors: THREE.FaceColors
+                                    });
+                                    var cube = new THREE.Mesh(geometry, material);
+                                    cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.scale.y = countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
+                                    cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
+                                    cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.position.y = cube.scale.y / 2;
+                                    // tween
+                                    var cubeItem = {
+                                        y: countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
+                                        mesh: cube
+                                    };
+
+                                    var updateCallback = function () {
+                                        this.mesh.scale.y = this.y;
+                                        this.mesh.position.y = this.mesh.scale.y / 2;
+                                        //console.log("cube.scale.y:" + this.mesh.scale.y);
+                                    }
+                                    var tween = new TWEEN.Tween(cubeItem)
+                                        .to({
+                                        y: countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE
+                                    }, 2000)
+                                        .delay(0)
+                                        .onUpdate(updateCallback)
+                                        .easing(TWEEN.Easing.Elastic.Out)
+                                        .start();
+                                    group_cube.push(cube);
+                                    scene.add(cube);
+                                    break;
+                                case 2:
+                                    var geometry = new THREE.CubeGeometry(1, 1, 1);
+                                    for (var i = 0; i < geometry.faces.length; i++) {
+                                        geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+                                    }
+                                    var material = new THREE.MeshBasicMaterial({
+                                        vertexColors: THREE.FaceColors
+                                    });
+                                    var cube = new THREE.Mesh(geometry, material);
+                                    cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.scale.y = countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
+                                    cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
+                                    cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.position.y = cube.scale.y / 2;
+                                    // tween
+                                    var cubeItem = {
+                                        y: countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
+                                        mesh: cube
+                                    };
+
+                                    var updateCallback = function () {
+                                        this.mesh.scale.y = this.y;
+                                        this.mesh.position.y = this.mesh.scale.y / 2;
+                                    }
+                                    var tween = new TWEEN.Tween(cubeItem)
+                                        .to({
+                                        y: countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE
+                                    }, 2000)
+                                        .delay(0)
+                                        .onUpdate(updateCallback)
+                                        .easing(TWEEN.Easing.Elastic.Out)
+                                        .start();
+                                    group_cube.push(cube);
+                                    scene.add(cube);
+                                    break;
+                                case 3:
+                                    var geometry = new THREE.CubeGeometry(1, 1, 1);
+                                    for (var i = 0; i < geometry.faces.length; i++) {
+                                        geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+                                    }
+                                    var material = new THREE.MeshBasicMaterial({
+                                        vertexColors: THREE.FaceColors
+                                    });
+                                    var cube = new THREE.Mesh(geometry, material);
+                                    cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.scale.y = countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
+                                    cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.position.z = -(coord.y + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
+                                    cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+
+                                    cube.position.y = cube.scale.y / 2;
+                                    // tween
+                                    var cubeItem = {
+                                        y: countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
+                                        mesh: cube
+                                    };
+
+                                    var updateCallback = function () {
+                                        this.mesh.scale.y = this.y;
+                                        this.mesh.position.y = this.mesh.scale.y / 2;
+                                        //console.log("cube.scale.y:" + this.mesh.scale.y);
+                                    }
+                                    var tween = new TWEEN.Tween(cubeItem)
+                                        .to({
+                                        y: countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE
+                                    }, 2000)
+                                        .delay(0)
+                                        .onUpdate(updateCallback)
+                                        .easing(TWEEN.Easing.Elastic.Out)
+                                        .start();
+                                    group_cube.push(cube);
+                                    scene.add(cube);
+                                    break;
+                                case 4:
+                                    var geometry = new THREE.CubeGeometry(1, 1, 1);
+                                    for (var i = 0; i < geometry.faces.length; i++) {
+                                        geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+                                    }
+                                    var material = new THREE.MeshBasicMaterial({
+                                        vertexColors: THREE.FaceColors
+                                    });
+                                    var cube = new THREE.Mesh(geometry, material);
+                                    cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.scale.y = countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
+                                    cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.position.z = -(coord.y + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
+                                    cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.position.y = cube.scale.y / 2;
+                                    // tween
+                                    var cubeItem = {
+                                        y: countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
+                                        mesh: cube
+                                    };
+
+                                    var updateCallback = function () {
+                                        this.mesh.scale.y = this.y;
+                                        this.mesh.position.y = this.mesh.scale.y / 2;
+                                        //console.log("cube.scale.y:" + this.mesh.scale.y);
+                                    }
+                                    var tween = new TWEEN.Tween(cubeItem)
+                                        .to({
+                                        y: countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE
+                                    }, 2000)
+                                        .delay(0)
+                                        .onUpdate(updateCallback)
+                                        .easing(TWEEN.Easing.Elastic.Out)
+                                        .start();
+                                    group_cube.push(cube);
+                                    scene.add(cube);
+                                    break;
+                                default:
+                                    //console.log("countSurvey:" + countSurveyTXT + ":" + countSurveyIMG + ":" + countSurveyAUD + ":" + countSurveyVID);
+                                    break;
+                                }
+                            }
+
+                        }                   
                     }
                     break;
                 default:
                     break;
                 }
-
             }
 
             function animate() {
                 requestAnimationFrame(animate);
                 //tween
                 TWEEN.update();
-				//camera
-				if(camera.position.y<30){
-					camera.position.y=40;
-				}
+                //camera
+                if (camera.position.y < 30) {
+                    camera.position.y = 40;
+                }
                 // update
-		
+
                 var date = new Date();
                 var time = date.getTime();
                 var timeDiff = time - lastTime;
@@ -938,13 +1144,13 @@
 
                 render();
                 update();
-				
+
 
             }
 
             function update() {
-				//controls.panSpeed = camera.position.y/1000;
-				//console.log("cam.pos.y:spd"+camera.position.y+":"+controls.panSpeed);
+                //controls.panSpeed = camera.position.y/1000;
+                //console.log("cam.pos.y:spd"+camera.position.y+":"+controls.panSpeed);
                 controls.update();
                 //camera.position.z = Math.max( camera.position.z, 50);
                 stats.update();
@@ -972,27 +1178,31 @@
                 NELatLng = proj.fromPointToLatLng(NEPoint);
                 //console.log(' NE: '+ NELatLng);
             }
-			
-			//skybox
-			function loadTexture( path ) {
 
-				var texture = new THREE.Texture( texture_placeholder );
-				var material = new THREE.MeshBasicMaterial( { map: texture, overdraw: true } );
+             //skybox
 
-				var image = new Image();
-				image.onload = function () {
+            function loadTexture(path) {
 
-					texture.needsUpdate = true;
-					material.map.image = this;
+                var texture = new THREE.Texture(texture_placeholder);
+                var material = new THREE.MeshBasicMaterial({
+                    map: texture,
+                    overdraw: true
+                });
 
-					render();
+                var image = new Image();
+                image.onload = function () {
 
-				};
-				image.src = path;
+                    texture.needsUpdate = true;
+                    material.map.image = this;
 
-				return material;
+                    render();
 
-			}
+                };
+                image.src = path;
+
+                return material;
+
+            }
              //get map tile, calculate lat, lng of tile
 
             function init_tiles(zoom) {
