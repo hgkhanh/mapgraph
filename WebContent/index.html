@@ -6,15 +6,16 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="css/modern-responsive.css" rel="stylesheet">
         <title>3D visualization Web data statistics</title>
-        <script type="text/javascript" src="js/threejs/three.js"></script>
+           
+        <script type="text/javascript" src="js/threejs/three.min.js"></script>
+
+		<script type="text/javascript" src="js/csg.js"></script>    
+		<script type="text/javascript" src="js/ThreeCSG.js"></script> 		
         <script type="text/javascript" src="js/threejs/Detector.js"></script>
         <script type="text/javascript" src="js/threejs/TrackballControls.js"></script>
         <script type="text/javascript" src="js/threejs/OrbitControls.js"></script>
         <script type="text/javascript" src="js/threejs/stats.min.js"></script>
-        <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwjSVZUk7D3LgeLPHMurDHm5Z-u39IeY0&sensor=false">
-            
-        </script>
-        <script src="https://google-code-prettify.googlecode.com/svn/loader/run_prettify.js"></script>
+        <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwjSVZUk7D3LgeLPHMurDHm5Z-u39IeY0&sensor=false"></script>
         <!-- modern ui lib -->
         <link rel="stylesheet" type="text/css" href="css/modern.css">
         <link href="css/modern-responsive.css" rel="stylesheet">
@@ -66,7 +67,10 @@
                             </div>
                             <div id="time_col">
                                 	<h3>Thời gian</h3>
+							<label class="input-control checkbox indeterminate">
+								<input type="checkbox" id="time_all" name="time" value="time_all">	<span class="helper"><b>Chọn tất cả</b></span>
 
+							</label>
                             </div>
                         </form>	<a class="button default" onClick="drawDatatypeGraph()">View</a>
 
@@ -95,6 +99,9 @@
              //skybox
             var texture_placeholder;
              //init var
+			var hemiLight;
+			var SCREEN_WIDTH = window.innerWidth;
+			var SCREEN_HEIGHT = window.innerHeight;
             var ZOOM_MIN = 15;
             var BAR_WIDTH = 30;
             var BAR_HEIGHT_MULTIPLE = 10;
@@ -155,10 +162,19 @@
                 $("#dist_all").change(function () {
                     if (this.checked) {
                         console.log("dist_all checked");
-                        $("input[type='checkbox']").prop("checked", true);
+                        $("input[type='checkbox'][name='dist']").prop("checked", true);
                     } else {
                         console.log("dist_all unchecked");
-                        $("input[type='checkbox']").prop("checked", false);
+                        $("input[type='checkbox'][name='dist']").prop("checked", false);
+                    }
+                });
+				$("#time_all").change(function () {
+                    if (this.checked) {
+                        console.log("time_all checked");
+                        $("input[type='checkbox'][name='time']").prop("checked", true);
+                    } else {
+                        console.log("time_all unchecked");
+                        $("input[type='checkbox'][name='time']").prop("checked", false);
                     }
                 });
                 $.ajax({
@@ -248,10 +264,14 @@
                     drawMap();
                     graph();
                     animate();
-                    $("input[type='checkbox']").change(function () {
+					
+					
+					// "check all" check box
+					 // district check_all
+                    $("input[type='checkbox'][name='dist']").change(function () {
                         //console.log("check change,box " + $("input[type='checkbox'][value='4'][name='dist']").get(0).name + " length:" + $("input[type='checkbox'][value='4'][name='dist']").length + " is : " + $("input[type='checkbox'][value='4']")[0].checked);
                         console.log("check change,box " + $(this).attr("name") + " " + $(this).attr("value") + " is " + $(this).is(":checked"));
-                        if ($("input[type='checkbox']:not(:checked)").length == 1) {
+                        if ($("input[type='checkbox'][name='dist']:not(:checked)").length == 1) {
                             //console.log("1 unchecked");
                             if ($("#dist_all").is(":not(:checked)")) {
                                 //console.log("and thats dist_all-> check dist_all now");y
@@ -263,12 +283,23 @@
                         }
                         //draw mapgraph
                         graph();
-                        //if($(this).attr("name")=="dist"){							
-                        //	drawDistGraph();
-                        //}
-                        //else {
-                        //	drawDatatypeGraph();
-                        //}
+                    });
+					//street check_all
+					$("input[type='checkbox'][name='time']").change(function () {
+                        //console.log("check change,box " + $("input[type='checkbox'][value='4'][name='dist']").get(0).name + " length:" + $("input[type='checkbox'][value='4'][name='dist']").length + " is : " + $("input[type='checkbox'][value='4']")[0].checked);
+                        console.log("check change,box " + $(this).attr("name") + " " + $(this).attr("value") + " is " + $(this).is(":checked"));
+                        if ($("input[type='checkbox'][name='time']:not(:checked)").length == 1) {
+                            //console.log("1 unchecked");
+                            if ($("#time_all").is(":not(:checked)")) {
+                                //console.log("and thats dist_all-> check dist_all now");y
+                                $("#time_all").prop('checked', true);
+                            } else {
+                                console.log("uncheck idst_all now");
+                                $("#time_all").prop('checked', false);
+                            }
+                        }
+                        //draw mapgraph
+                        graph();
                     });
                     $(window).resize(function () {
                         //console.log("body width:" + $('body').innerWidth());
@@ -276,7 +307,9 @@
                     });
                 });
             });
-
+			
+			
+			// reponsive layout when resizing window
             function responsive() {
                 //console.log("body width:" + $('body').innerWidth());
                 if ($('body').innerWidth() >= 1340) {
@@ -404,42 +437,44 @@
                 graph();
                 animate();
             }
-            /*  SERVLET CALL */
-             // Set up the three.js scene. This is the most basic setup without
-             // any special stuff
-
+			
             function init() {
                 console.log("init :" + graphtype_flag);
-                // set the scene size
-                var WIDTH = 600,
-                    HEIGHT = 600;
-
+				//CAMERA
+				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
+                camera.position.y = 1300;
+                camera.position.z = 1300;
+                //camera.rotation.x = 45 * (Math.PI / 180);
                 // set some camera attributes
-                var VIEW_ANGLE = 45,
-                    ASPECT = window.innerWidth / window.innerHeight,
-                    NEAR = 1,
-                    FAR = 110000;
+                //var VIEW_ANGLE = 45,
+                //    ASPECT = window.innerWidth / window.innerHeight,
+                //    NEAR = 1,
+                //    FAR = 110000;
 
-                // create a WebGL renderer, camera, and a scene
+                // RENDERER
                 renderer = new THREE.WebGLRenderer({
                     clearColor: 0xffffff,
                     clearAlpha: 0.5,
                     antialias: true
                 });
                 renderer.setSize(window.innerWidth, window.innerHeight);
+				// shadow
+				renderer.shadowMapEnabled = true;
+				renderer.shadowMapSoft = false;
+				renderer.gammaInput = true;
+				renderer.gammaOutput = true;
+				renderer.physicallyBasedShading = true;  
+				renderer.shadowMapType=THREE.PCFSoftShadowMap;				
+				
                 var maxAnisotropy = renderer.getMaxAnisotropy();
-                camera = new THREE.PerspectiveCamera(VIEW_ANGLE, ASPECT, NEAR, FAR);
+               
+				//SCENE
                 scene = new THREE.Scene();
-
-                // add and position the camera at a fixed position
-                // camera
-                // camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 1000);
-                camera.position.y = 1300;
-                camera.position.z = 1300;
-                //camera.rotation.x = 45 * (Math.PI / 180);
+				//scene.fog = new THREE.Fog( 0xffffff, 1000, 10000 );
+                
 
 
-                // control
+                // CONTROL
                 controls = new THREE.OrbitControls(camera);
 
                 controls.rotateSpeed = 1.0;
@@ -461,41 +496,83 @@
                 //controls.rotateSpeed = 1.0;
                 //controls.zoomSpeed = 1.2;
                 //controls.panSpeed = 0.8;
-
                 //controls.noZoom = false;
                 //controls.noPan = false;
-
                 //controls.dynamicDampingFactor = 0.3;
-
                 //controls.keys = [ 65, 83, 68 ];
-
                 // start the renderer, and black background
                 //renderer.setSize(WIDTH, HEIGHT);
                 //renderer.setClearColor(0x000);
-
                 // add the render target to the page
-                //$("#chart").append(renderer.domElement);
-
+                //$("#chart").append(renderer.domElement);			
+				
+				//LIGHT
+				
                 // add subtle ambient lighting
-                var ambientLight = new THREE.AmbientLight(0x555555);
+                var ambientLight = new THREE.AmbientLight(0xffffff);
                 scene.add(ambientLight);
-
                 // add directional light source
-                var directionalLight = new THREE.DirectionalLight(0xffffff);
-                directionalLight.position.set(1, 1, 1);
+                var directionalLight = new THREE.DirectionalLight(0xffffff,0.1);
+                directionalLight.position.set(-1000, 3000, -2000);
+				directionalLight.shadowCameraVisible = true;       
+                directionalLight.target.position.set(0, 0, 0);
+                directionalLight.castShadow = true;
+				directionalLight.shadowDarkness = 0.5;
+				directionalLight.shadowCameraNear    =  10;
+				directionalLight.shadowCameraFar    =  6000;
+				directionalLight.shadowCameraRight     =  3000;
+				directionalLight.shadowCameraLeft     = -3000;
+				directionalLight.shadowCameraTop      =  3000;
+				directionalLight.shadowCameraBottom   = -3000;
+				directionalLight.shadowMapWidth=Math.pow(2,12);
+				directionalLight.shadowMapHeight=Math.pow(2,12);
+				directionalLight.shadowBias=-0.0008;
+                scene.add(directionalLight);
+				
+				
+				
+				/*var directionalLight = new THREE.DirectionalLight(0xffffff,0.1);
+                directionalLight.position.set(-1000, 2000, -2000);
                 directionalLight.target.position.set(0, 0, 0);
                 directionalLight.shadowCameraVisible = true;
                 directionalLight.castShadow = true;
-                scene.add(directionalLight);
-                var spotLight = new THREE.SpotLight(0xffffff, 0.3);
-                spotLight.position.set(-250, 250, 100);
+				directionalLight.shadowDarkness = 0.5;
+				directionalLight.shadowCameraNear    =  500;
+				directionalLight.shadowCameraFar    =  4000;
+				directionalLight.shadowCameraRight     =  500;
+				directionalLight.shadowCameraLeft     = -500;
+				directionalLight.shadowCameraTop      =  500;
+				directionalLight.shadowCameraBottom   = -500;
+                scene.add(directionalLight);	
+				
+				var directionalLight = new THREE.DirectionalLight(0xffffff,0.1);
+                directionalLight.position.set(-1000, 2000, -2000);
+                directionalLight.target.position.set(0, 0, 0);
+                directionalLight.shadowCameraVisible = true;
+                directionalLight.castShadow = true;
+				directionalLight.shadowDarkness = 0.5;
+				directionalLight.shadowCameraNear    =  500;
+				directionalLight.shadowCameraFar    =  4000;
+				directionalLight.shadowCameraRight     =  500;
+				directionalLight.shadowCameraLeft     = -500;
+				directionalLight.shadowCameraTop      =  500;
+				directionalLight.shadowCameraBottom   = -500;
+                scene.add(directionalLight);		*/
+                /*var spotLight = new THREE.SpotLight(0xffffff, 0.05);
+                spotLight.position.set(-2000, 2000, -4000);
+                spotLight.target.position.set(0, 0, 0);
+				spotLight.shadowCameraVisible = true;
                 spotLight.castShadow = true;
-                spotLight.shadowMapWidth = 1024;
-                spotLight.shadowMapHeight = 1024;
+				spotLight.shadowDarkness = 0.5;
                 spotLight.shadowCameraNear = 500;
-                spotLight.shadowCameraFar = 4000;
-                spotLight.shadowCameraFov = 30;
-                scene.add(spotLight);
+                spotLight.shadowCameraFar = 10000;
+                scene.add(spotLight);*/
+				//hemiLight
+				hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.05 );
+				hemiLight.color.setHSL( 0.6, 1, 0.75 );
+				hemiLight.groundColor.setHSL( 0.1, 0.8, 0.7 );
+				hemiLight.position.y = 500;
+				//scene.add( hemiLight );
 
 
                 container = document.getElementById('container');
@@ -511,6 +588,7 @@
                 container.appendChild(stats.domElement);
 
                 //
+				
 
                 window.addEventListener('resize', onWindowResize, false);
             }
@@ -518,19 +596,19 @@
             function drawMap() {
                 //group
                 group_plane = new THREE.Object3D();
-
+				//group_plane.castShadow=true;
+				//group_plane.receiveShadow=true;
                 // big/base  plane 
                 // material
-                plane = new THREE.Mesh(new THREE.PlaneGeometry(15000, 15000), new THREE.MeshLambertMaterial({
-                    transparent: true,
-                    opacity: 0.3,
-                    side: THREE.DoubleSide,
-                    blending: THREE.AdditiveAlpha,
-                    color: 0xffffff
+                plane = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000), new THREE.MeshLambertMaterial({
+                    map: THREE.ImageUtils.loadTexture('images/land.jpg'),	
+					overdraw: true
                 }));
                 plane.position.y = -10;
                 plane.rotation.x = -Math.PI / 2;
                 plane.rotation.z = Math.PI / 4 + Math.PI / 24;
+				//plane.castShadow=true;
+				//plane.receiveShadow=true;
                 group_plane.add(plane);
                 // plane
                 for (var i = -(TILE_MULTIPLE - 1) / 2; i <= (TILE_MULTIPLE - 1) / 2; i++) {
@@ -547,13 +625,15 @@
                         texture = new THREE.Texture(image);
                         // material
                         var material = new THREE.MeshLambertMaterial({
-                            map: THREE.ImageUtils.loadTexture(getURL(i, j))
+                            map: THREE.ImageUtils.loadTexture(getURL(i, j)),
                             //map: texture
-                            ,
+                            
                             overdraw: true,
                             opacity: 1,
                             transparent: false
                         });
+						//material.castShadow=true;
+						//material.receiveShadow=true;
                         //console.log(getURL(i,j));
                         plane = new THREE.Mesh(new THREE.PlaneGeometry(STATIC_MAP_WIDTH, STATIC_MAP_HEIGHT, 1, 1), material);
                         plane.overdraw = true;
@@ -562,6 +642,8 @@
                         plane.position.x = i * STATIC_MAP_WIDTH;
                         plane.rotation.x = -Math.PI / 2;
                         plane.material.side = THREE.DoubleSide;
+						//plane.castShadow=true;
+						plane.receiveShadow=true;
                         group_plane.add(plane);
                     }
                 }
@@ -569,7 +651,7 @@
                 //console.log("plan"+plane.rotation.x+":"+plane.rotation.y+":"+plane.rotation.z);		
 
                 //skybox
-                texture_placeholder = document.createElement('canvas');
+               /*  texture_placeholder = document.createElement('canvas');
                 texture_placeholder.width = 128;
                 texture_placeholder.height = 128;
 
@@ -593,11 +675,42 @@
                 skybox.flipSided = true;
                 skybox.frustumCulled = true;
                 skybox.rotation.y = 180;
-                scene.add(skybox);
+                scene.add(skybox); */
+				// SKYDOME
+				// create dome shape
+				
+
+				//scene.fog.color.copy( uniforms.bottomColor.value );
+				var materials = [
+					loadTexture('images/sky_lightblue_1000.jpg'),
+                    loadTexture('skybox/skyrender0002.jpg')
+
+                ];
+				var sphereMat = new THREE.MeshLambertMaterial();
+				var sphere_mesh = new THREE.Mesh( new THREE.SphereGeometry( 4000, 32, 15 ), sphereMat );
+				var sphere_bsp  = new ThreeBSP( sphere_mesh );
+				
+				var material	= new THREE.MeshLambertMaterial( { color: 0xaaaaDD, shading: THREE.FlatShading } );
+				var cube_mesh  = new THREE.Mesh( new THREE.CubeGeometry(8000,8000,8000), material);
+				cube_mesh.position.y=-4200;
+				var cube_bsp = new ThreeBSP( cube_mesh );
+				
+				
+				var subtract_bsp = sphere_bsp.subtract( cube_bsp );
+				var result = subtract_bsp.toMesh( new THREE.MeshLambertMaterial({ shading: THREE.SmoothShading, map: THREE.ImageUtils.loadTexture('images/sky_lightblue_1000.jpg'),side: THREE.BackSide }) );
+				result.flipSided = true;
+				console.log(".faces.length"+result.geometry.faces.length);
+				result.geometry.computeVertexNormals();
+				result.rotation.y=Math.PI;
+				scene.add( result );
+				
+				
+				
+				
                 //Axes
-                //var axes = new THREE.AxisHelper();
-                //axes.scale.set( 100, 100, 100 );
-                //scene.add( axes );
+                var axes = new THREE.AxisHelper();
+                axes.scale.set( 1000, 1000, 1000 );
+                scene.add( axes );
                 // renderer
 
                 //renderer = new THREE.WebGLRenderer( { antialias: false } );
@@ -644,12 +757,13 @@
                             //console.log(jsonObj.districtStats[index].data);	
                             // random startMultipler
                             startMultipler = Math.random() * (max - min) + min;
-                            var geometry = new THREE.CubeGeometry(1, 1, 1);
+                            var geometry = new THREE.CubeGeometry(1, 1, 1);			
+							var color_code=Math.random() * 0xffffff;							
                             for (var i = 0; i < geometry.faces.length; i++) {
-                                geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+                                geometry.faces[i].color.setHex(color_code);
                             }
 
-                            var material = new THREE.MeshBasicMaterial({
+                            var material = new THREE.MeshLambertMaterial({
                                 vertexColors: THREE.FaceColors
                             });
                             var cube = new THREE.Mesh(geometry, material);
@@ -659,6 +773,9 @@
                             cube.position.z = -coord.y;
                             cube.position.x = coord.x;
                             cube.position.y = cube.scale.y / 2;
+							//shadow
+							cube.castShadow=true;
+							cube.receiveShadow=true;
                             // tween
                             var cubeItem = {
                                 y: (jsonObj.districtStats[index].data + 0.1) * BAR_HEIGHT_MULTIPLE * startMultipler,
@@ -745,7 +862,7 @@
                                     for (var i = 0; i < geometry.faces.length; i++) {
                                         geometry.faces[i].color.setHex(Math.random() * 0xffffff);
                                     }
-                                    var material = new THREE.MeshBasicMaterial({
+                                    var material = new THREE.MeshPhongMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
@@ -755,6 +872,9 @@
                                     cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
                                     cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
+									//shadow
+									cube.castShadow=true;
+									cube.receiveShadow=true;
                                     // tween
                                     var cubeItem = {
                                         y: countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
@@ -782,7 +902,7 @@
                                     for (var i = 0; i < geometry.faces.length; i++) {
                                         geometry.faces[i].color.setHex(Math.random() * 0xffffff);
                                     }
-                                    var material = new THREE.MeshBasicMaterial({
+                                    var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
@@ -792,6 +912,9 @@
                                     cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
                                     cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
+									//shadow
+									cube.castShadow=true;
+									cube.receiveShadow=true;
                                     // tween
                                     var cubeItem = {
                                         y: countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
@@ -818,7 +941,7 @@
                                     for (var i = 0; i < geometry.faces.length; i++) {
                                         geometry.faces[i].color.setHex(Math.random() * 0xffffff);
                                     }
-                                    var material = new THREE.MeshBasicMaterial({
+                                    var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
@@ -829,6 +952,9 @@
                                     cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
 
                                     cube.position.y = cube.scale.y / 2;
+									//shadow
+									cube.castShadow=true;
+									cube.receiveShadow=true;
                                     // tween
                                     var cubeItem = {
                                         y: countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
@@ -856,7 +982,7 @@
                                     for (var i = 0; i < geometry.faces.length; i++) {
                                         geometry.faces[i].color.setHex(Math.random() * 0xffffff);
                                     }
-                                    var material = new THREE.MeshBasicMaterial({
+                                    var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
@@ -866,7 +992,10 @@
                                     cube.position.z = -(coord.y + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
                                     cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
-                                    // tween
+                                    //shadow
+									cube.castShadow=true;
+									cube.receiveShadow=true;
+									// tween
                                     var cubeItem = {
                                         y: countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
                                         mesh: cube
@@ -966,7 +1095,7 @@
                                     for (var i = 0; i < geometry.faces.length; i++) {
                                         geometry.faces[i].color.setHex(Math.random() * 0xffffff);
                                     }
-                                    var material = new THREE.MeshBasicMaterial({
+                                    var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
@@ -976,6 +1105,9 @@
                                     cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
                                     cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
+									//shadow
+									cube.castShadow=true;
+									//cube.receiveShadow=true;
                                     // tween
                                     var cubeItem = {
                                         y: countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
@@ -1003,7 +1135,7 @@
                                     for (var i = 0; i < geometry.faces.length; i++) {
                                         geometry.faces[i].color.setHex(Math.random() * 0xffffff);
                                     }
-                                    var material = new THREE.MeshBasicMaterial({
+                                    var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
@@ -1013,6 +1145,9 @@
                                     cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
                                     cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
+									//shadow
+									cube.castShadow=true;
+									//cube.receiveShadow=true;
                                     // tween
                                     var cubeItem = {
                                         y: countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
@@ -1039,7 +1174,7 @@
                                     for (var i = 0; i < geometry.faces.length; i++) {
                                         geometry.faces[i].color.setHex(Math.random() * 0xffffff);
                                     }
-                                    var material = new THREE.MeshBasicMaterial({
+                                    var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
@@ -1048,8 +1183,10 @@
                                     cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.z = -(coord.y + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
                                     cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
-
                                     cube.position.y = cube.scale.y / 2;
+									//shadow
+									cube.castShadow=true;
+									//cube.receiveShadow=true;
                                     // tween
                                     var cubeItem = {
                                         y: countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
@@ -1077,7 +1214,7 @@
                                     for (var i = 0; i < geometry.faces.length; i++) {
                                         geometry.faces[i].color.setHex(Math.random() * 0xffffff);
                                     }
-                                    var material = new THREE.MeshBasicMaterial({
+                                    var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
@@ -1087,6 +1224,9 @@
                                     cube.position.z = -(coord.y + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
                                     cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
+									//shadow
+									cube.castShadow=true;
+									//cube.receiveShadow=true;
                                     // tween
                                     var cubeItem = {
                                         y: countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
@@ -1184,7 +1324,7 @@
             function loadTexture(path) {
 
                 var texture = new THREE.Texture(texture_placeholder);
-                var material = new THREE.MeshBasicMaterial({
+                var material = new THREE.MeshLambertMaterial({
                     map: texture,
                     overdraw: true
                 });
@@ -1275,6 +1415,39 @@
                 coord.x = (STATIC_MAP_WIDTH / 2) * ((lng - centerPoint.lng()) / (centerPoint.lng() - NWLng));
             }
         </script>
+		<!--Shader-->
+		<script type="x-shader/x-vertex" id="vertexShader">
+
+			varying vec3 vWorldPosition;
+
+			void main() {
+
+				vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
+				vWorldPosition = worldPosition.xyz;
+
+				gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
+
+			}
+
+		</script>
+
+		<script type="x-shader/x-fragment" id="fragmentShader">
+
+			uniform vec3 topColor;
+			uniform vec3 bottomColor;
+			uniform float offset;
+			uniform float exponent;
+
+			varying vec3 vWorldPosition;
+
+			void main() {
+
+				float h = normalize( vWorldPosition + offset ).y;
+				gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( h, exponent ), 0.0 ) ), 1.0 );
+
+			}
+
+		</script>
     </body>
 
 </html>
