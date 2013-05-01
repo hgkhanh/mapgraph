@@ -7,8 +7,8 @@
         <link href="css/modern-responsive.css" rel="stylesheet">
         <title>3D visualization Web data statistics</title>
            
-        <script type="text/javascript" src="js/threejs/three.min.js"></script>
-
+        <script type="text/javascript" src="js/threejs/three.js"></script>
+		
 		<script type="text/javascript" src="js/csg.js"></script>    
 		<script type="text/javascript" src="js/ThreeCSG.js"></script> 		
         <script type="text/javascript" src="js/threejs/Detector.js"></script>
@@ -16,11 +16,12 @@
         <script type="text/javascript" src="js/threejs/OrbitControls.js"></script>
         <script type="text/javascript" src="js/threejs/stats.min.js"></script>
         <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwjSVZUk7D3LgeLPHMurDHm5Z-u39IeY0&sensor=false"></script>
-        <!-- modern ui lib -->
+       
         <link rel="stylesheet" type="text/css" href="css/modern.css">
         <link href="css/modern-responsive.css" rel="stylesheet">
         <script type='text/javascript' src='js/tween.min.js'></script>
         <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+		<!-- modern ui lib -->
         <script type="text/javascript" src="js/metroui/accordion.js"></script>
         <script type="text/javascript" src="js/metroui/buttonset.js"></script>
         <script type="text/javascript" src="js/metroui/calendar.js"></script>
@@ -33,60 +34,71 @@
         <script type="text/javascript" src="js/metroui/pagecontrol.js"></script>
         <script type="text/javascript" src="js/metroui/tile-drag.js"></script>
         <script type="text/javascript" src="js/metroui/tile-slider.js"></script>
+		
+		<!--  css -->
         <!-- <link rel="stylesheet" type="text/css" href="css/modern-responsive.css"> -->
         <!-- <link rel="stylesheet" type="text/css" href="css/theme-dark.css"> -->
     </head>
     
     <body class="metrouicss" style="zoom: 1;">
         <div id="container" style="width: 70%; margin: auto; float: left; z-index: -10; position: relative"></div>
-        <div id="form" style="width: 30%; margin: auto; float: right;z-index: 200; position: relative;background-color: rgba(255,255,255,0.5);">
+       
+		<div id="form" style="width: 30%; margin: auto; float: right;z-index: 200; position: relative;background-color: rgba(255,255,255,0.5);">
             <!-- <input type="submit" value="Submit" id="button" />
             <input type="reset" value="Reset" />-->
-            <!-- <h2>Form</h2> -->
-            <ul class="accordion" data-role="accordion">
-                <li class="active"><a href="#"> Quận/Huyện</a>
+            <!-- <h2>Form</h2> -->			
+			
+			<div style="position: relative;margin:10px;">
+					<a href="#"> Zoom : </a><a href="#" id="zoom_slide_text"></a>
+					<div id="zoom_slider" class="slider" data-role="slider" data-param-init-value="20" data-param-accuracy="20"></div>
+			</div>
+			<ul class="accordion" data-role="accordion" style="position: relative;margin:10px">
+				<li class="active"><a href="#"> Quận/Huyện</a>
 
-                    <div id="district" class="row">
-                        <label class="input-control checkbox indeterminate">
-                            <input type="checkbox" id="dist_all" name="dist" value="dist_all">	<span class="helper"><b>Chọn tất cả</b></span>
+					<div id="district" class="row">
+						<label class="input-control checkbox indeterminate">
+							<input type="checkbox" id="dist_all" name="dist" value="dist_all">	<span class="helper"><b>Chọn tất cả</b></span>
 
-                        </label>
-                        <div id="districtFormContainer" style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
-                            <form id="distForm"></form>	<a class="button default" onClick="drawDistGraph()">View</a>
+						</label>
+						<div id="districtFormContainer" style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
+							<form id="distForm"></form>	<a class="button default" onClick="drawDistGraph()">View</a>
 
-                        </div>
-                    </div>
-                </li>
-                <li><a href="#"> Thống kê sử dụng </a>
+						</div>
+					</div>
+				</li>
+				<li><a href="#"> Thống kê sử dụng </a>
 
-                    <div id="dataFormContainer" style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
-                        <form id="dataForm">
-                            <div id="datatype_col">
-                                	<h3>Loại dữ liệu</h3>
+					<div id="dataFormContainer" style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
+						<form id="dataForm">
+							<div id="datatype_col">
+									<h3>Loại dữ liệu</h3>
 
-                            </div>
-                            <div id="time_col">
-                                	<h3>Thời gian</h3>
+							</div>
+							<div id="time_col">
+									<h3>Thời gian</h3>
 							<label class="input-control checkbox indeterminate">
 								<input type="checkbox" id="time_all" name="time" value="time_all">	<span class="helper"><b>Chọn tất cả</b></span>
 
 							</label>
-                            </div>
-                        </form>	<a class="button default" onClick="drawDatatypeGraph()">View</a>
+							</div>
+						</form>	<a class="button default" onClick="drawDatatypeGraph()">View</a>
 
-                    </div>
-                    <li><a href="#"> Đường phố </a>
+					</div>
+					<li><a href="#"> Đường phố </a>
 
-                        <div id="seteetFormContainer" style="-moz-column-count: 2; -webkit-column-count: 2; column-count: 2;">
-                            <div class="input-control text">
-                                <input type="text">
-                                <button class="btn-clear" tabindex="-1" type="button"></button>
-                            </div>	<a class="button default" onClick="drawStreetGraph()">View</a>
-	<a class="button default" onClick="zoomMap()">Zoom</a>
+						<div id="seteetFormContainer" style="-moz-column-count: 2; -webkit-column-count: 2; column-count: 2;">
+							<div class="input-control text">
+								<input type="text">
+								<button class="btn-clear" tabindex="-1" type="button"></button>
+							</div>	<a class="button default" onClick="drawStreetGraph()">View</a>
+	
 
-                        </div>
-                    </li>
-            </ul>
+						</div>
+					</li>
+					
+					
+			</ul>
+			
         </div>
         <!-- form jquery -->
         <script type="text/javascript">
@@ -138,23 +150,24 @@
                 x: 0,
                 y: 0
             }
-            var test_lat = 21.0357;
-            var test_lng = 105.8261;
+            var map_center_lat = 21.0357;
+            var map_center_lng = 105.8261;
             var x_tile = 0;
             var y_tile = 0;
             var tile_center_lng = 0;
             var tile_center_lat = 0;
             var jsonObj;
              //get map tile, calculate lat, lng of tile
-            var centerPoint;
+            var centerPoint;			
             init_tiles(zoom);
-
              //getCorners(centerPoint,zoom,STATIC_MAP_HEIGHT,STATIC_MAP_WIDTH);
-            latLngToCoord(test_lat, test_lng);
+            latLngToCoord(map_center_lat, map_center_lng);
             console.log("cube pos :" + coord.x + ":" + coord.y);
              //Get fieldName
             $(document).ready(function () {
-                responsive();
+					
+				// handle responsive layout when resize window
+				responsive();
                 <!-- Show prgress cycle -->
                 $("#container").append("<img  src='./images/preloader-w8-line-black.gif'>");
                 <!-- SERVLET CALL -->				
@@ -185,7 +198,7 @@
                 }).success(function (data) {
                     <!-- Remove prgress cycle -->
                     $("#container").empty();
-                    console.log("done:" + data);
+                    //console.log("done:" + data);
                     jsonObj = eval("(" + data + ")");
                     for (var index = 0; index < jsonObj.fieldNames.length; index++) {
                         switch (jsonObj.fieldNames[index].type) {
@@ -259,13 +272,34 @@
                     $("#datatype_col").append("<br/>");
                     $("input[type='checkbox'][name='dist']").prop('checked', true);
                     $("input[type='checkbox'][name='time']").prop('checked', true);
-                    $("input[type='checkbox'][name='datatype']").prop('checked', true);
+                    $("input[type='checkbox'][name='datatype']").prop('checked', true);					;
                     init();
-                    drawMap();
-                    graph();
+					draw_tiles();
+					graph();
                     animate();
 					
-					
+					$("#zoom_slider").on("change", function(e, val){
+						console.log("x"+camera.position.x);
+						console.log("z"+camera.position.z);
+						CoordtoLatLng(camera.position.x,-camera.position.z);
+						console.log(map_center_lat+":"+map_center_lng);
+						console.log("zoom_slider changed:"+val);
+						
+						zoom=val/20+12;
+						switch (zoom) {
+						case 13:
+							BAR_WIDTH_MULTIPLE = 1;
+						case 14:
+							BAR_WIDTH_MULTIPLE = 0.8;
+						case 15:
+							BAR_WIDTH_MULTIPLE = 0.6;						
+						}
+						init_tiles(zoom); 
+						init();	
+						draw_tiles();
+						graph();
+						animate();
+					});
 					// "check all" check box
 					 // district check_all
                     $("input[type='checkbox'][name='dist']").change(function () {
@@ -308,7 +342,7 @@
                 });
             });
 			
-			
+				
 			// reponsive layout when resizing window
             function responsive() {
                 //console.log("body width:" + $('body').innerWidth());
@@ -346,16 +380,11 @@
                 }
 
             }
+			
+			
 
              <!--  Three js Script -->
-
-            function zoomMap() {
-                zoom = zoom + 1;
-                init_tiles(zoom);
-                init();
-                drawMap();
-            }
-
+			
             function drawStreetGraph() {
                 BAR_WIDTH = 10;
                 BAR_HEIGHT_MULTIPLE_DATATYPE = 20;
@@ -371,14 +400,14 @@
                 camera.position.y = 100;
                 camera.position.z = 100;
                 TILE_MULTIPLE = 11;
-
+				
                 if (graphtype_flag != 3) {
                     graphtype_flag = 3;
                     init_tiles(zoom);
                 }
-                graphtype_flag = 3;
-                init();
-                drawMap();
+				init();
+				draw_tiles();
+                graphtype_flag = 3;                
                 graph();
                 animate();
             }
@@ -398,14 +427,15 @@
                 camera.position.y = 1300;
                 camera.position.z = 1300;
                 TILE_MULTIPLE = 11;
-
+				
                 if (graphtype_flag == 3) {
                     graphtype_flag = 1;
                     init_tiles(zoom);
                 }
+				init();
+				draw_tiles();
                 graphtype_flag = 1;
-                init();
-                drawMap();
+               
 
                 graph();
                 animate();
@@ -433,7 +463,7 @@
                 }
                 graphtype_flag = 2;
                 init();
-                drawMap();
+				draw_tiles();
                 graph();
                 animate();
             }
@@ -441,7 +471,7 @@
             function init() {
                 console.log("init :" + graphtype_flag);
 				//CAMERA
-				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 10000);
+				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 15000);
                 camera.position.y = 1300;
                 camera.position.z = 1300;
                 //camera.rotation.x = 45 * (Math.PI / 180);
@@ -453,8 +483,6 @@
 
                 // RENDERER
                 renderer = new THREE.WebGLRenderer({
-                    clearColor: 0xffffff,
-                    clearAlpha: 0.5,
                     antialias: true
                 });
                 renderer.setSize(window.innerWidth, window.innerHeight);
@@ -475,36 +503,16 @@
 
 
                 // CONTROL
-                controls = new THREE.OrbitControls(camera);
-
+                controls = new THREE.OrbitControls( camera );
+				controls.addEventListener( 'change', render );
                 controls.rotateSpeed = 1.0;
                 controls.zoomSpeed = 1.2;
                 controls.panSpeed = 0.1;
-
-                controls.noRotate = false;
-                controls.noZoom = false;
-                controls.noPan = false;
-
                 controls.staticMoving = false;
                 controls.dynamicDampingFactor = 1.6;
-
                 controls.keys = [65, 83, 68];
-
-                controls.addEventListener('change', render);
-                //controls = new THREE.OrbitControls( camera );
-                //controls.autoRotate = true;
-                //controls.rotateSpeed = 1.0;
-                //controls.zoomSpeed = 1.2;
-                //controls.panSpeed = 0.8;
-                //controls.noZoom = false;
-                //controls.noPan = false;
-                //controls.dynamicDampingFactor = 0.3;
-                //controls.keys = [ 65, 83, 68 ];
-                // start the renderer, and black background
-                //renderer.setSize(WIDTH, HEIGHT);
-                //renderer.setClearColor(0x000);
-                // add the render target to the page
-                //$("#chart").append(renderer.domElement);			
+				controls.maxPolarAngle = Math.PI/2; 
+				controls.maxDistance = 4000;				
 				
 				//LIGHT
 				
@@ -591,16 +599,19 @@
 				
 
                 window.addEventListener('resize', onWindowResize, false);
-            }
-
-            function drawMap() {
-                //group
-                group_plane = new THREE.Object3D();
-				//group_plane.castShadow=true;
-				//group_plane.receiveShadow=true;
-                // big/base  plane 
+				var skyDome = new THREE.Mesh(new THREE.SphereGeometry( 5000, 32, 15,0,Math.PI*2 ),new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture('images/sky_lightblue_1000.jpg'), side: THREE.BackSide }))
+				skyDome.rotation.y = Math.PI;
+				scene.add(skyDome);
+				
+				
+                //Axes
+                var axes = new THREE.AxisHelper();
+                axes.scale.set( 1000, 1000, 1000 );
+                scene.add( axes );
+				
+				// big/base  plane 
                 // material
-                plane = new THREE.Mesh(new THREE.PlaneGeometry(8000, 8000), new THREE.MeshLambertMaterial({
+                plane = new THREE.Mesh(new THREE.CircleGeometry( 5000, 20, 0, Math.PI * 2 ), new THREE.MeshLambertMaterial({
                     map: THREE.ImageUtils.loadTexture('images/land.jpg'),	
 					overdraw: true
                 }));
@@ -609,115 +620,10 @@
                 plane.rotation.z = Math.PI / 4 + Math.PI / 24;
 				//plane.castShadow=true;
 				//plane.receiveShadow=true;
-                group_plane.add(plane);
-                // plane
-                for (var i = -(TILE_MULTIPLE - 1) / 2; i <= (TILE_MULTIPLE - 1) / 2; i++) {
-                    for (var j = -(TILE_MULTIPLE - 1) / 2; j <= (TILE_MULTIPLE - 1) / 2; j++) {
-
-
-                        //texture
-                        //image = document.getElementById("myCanvas");
-
-                        //imageContext = image.getContext( '2d' );
-                        //imageContext.fillStyle = '#FF0000';
-                        //imageContext.fillRect(0,0,150,75);
-
-                        texture = new THREE.Texture(image);
-                        // material
-                        var material = new THREE.MeshLambertMaterial({
-                            map: THREE.ImageUtils.loadTexture(getURL(i, j)),
-                            //map: texture
-                            
-                            overdraw: true,
-                            opacity: 1,
-                            transparent: false
-                        });
-						//material.castShadow=true;
-						//material.receiveShadow=true;
-                        //console.log(getURL(i,j));
-                        plane = new THREE.Mesh(new THREE.PlaneGeometry(STATIC_MAP_WIDTH, STATIC_MAP_HEIGHT, 1, 1), material);
-                        plane.overdraw = true;
-                        plane.doubleSided = true;
-                        plane.position.z = -j * STATIC_MAP_HEIGHT;
-                        plane.position.x = i * STATIC_MAP_WIDTH;
-                        plane.rotation.x = -Math.PI / 2;
-                        plane.material.side = THREE.DoubleSide;
-						//plane.castShadow=true;
-						plane.receiveShadow=true;
-                        group_plane.add(plane);
-                    }
-                }
-                scene.add(group_plane);
-                //console.log("plan"+plane.rotation.x+":"+plane.rotation.y+":"+plane.rotation.z);		
-
-                //skybox
-               /*  texture_placeholder = document.createElement('canvas');
-                texture_placeholder.width = 128;
-                texture_placeholder.height = 128;
-
-                var context = texture_placeholder.getContext('2d');
-                context.fillStyle = 'rgb( 200, 200, 200 )';
-                context.fillRect(0, 0, texture_placeholder.width, texture_placeholder.height);
-                var materials = [
-
-                    loadTexture('skybox/skyrender0002.jpg'), // right
-                    loadTexture('skybox/skyrender0005.jpg'), // left
-                    loadTexture('skybox/skyrender0003.jpg'), // top
-                    loadTexture('skybox/skyrender0006.jpg'), // bottom
-                    loadTexture('skybox/skyrender0001.jpg'), // back
-                    loadTexture('skybox/skyrender0004.jpg') // front
-
-                ];
-
-                var skybox = new THREE.Mesh(new THREE.CubeGeometry(15000, 15000, 15000, 1, 1, 1), new THREE.MeshFaceMaterial(materials));
-                skybox.scale.x = -1;
-                skybox.position.y = -100;
-                skybox.flipSided = true;
-                skybox.frustumCulled = true;
-                skybox.rotation.y = 180;
-                scene.add(skybox); */
-				// SKYDOME
-				// create dome shape
+                scene.add(plane);
 				
-
-				//scene.fog.color.copy( uniforms.bottomColor.value );
-				var materials = [
-					loadTexture('images/sky_lightblue_1000.jpg'),
-                    loadTexture('skybox/skyrender0002.jpg')
-
-                ];
-				var sphereMat = new THREE.MeshLambertMaterial();
-				var sphere_mesh = new THREE.Mesh( new THREE.SphereGeometry( 4000, 32, 15 ), sphereMat );
-				var sphere_bsp  = new ThreeBSP( sphere_mesh );
-				
-				var material	= new THREE.MeshLambertMaterial( { color: 0xaaaaDD, shading: THREE.FlatShading } );
-				var cube_mesh  = new THREE.Mesh( new THREE.CubeGeometry(8000,8000,8000), material);
-				cube_mesh.position.y=-4200;
-				var cube_bsp = new ThreeBSP( cube_mesh );
-				
-				
-				var subtract_bsp = sphere_bsp.subtract( cube_bsp );
-				var result = subtract_bsp.toMesh( new THREE.MeshLambertMaterial({ shading: THREE.SmoothShading, map: THREE.ImageUtils.loadTexture('images/sky_lightblue_1000.jpg'),side: THREE.BackSide }) );
-				result.flipSided = true;
-				console.log(".faces.length"+result.geometry.faces.length);
-				result.geometry.computeVertexNormals();
-				result.rotation.y=Math.PI;
-				scene.add( result );
-				
-				
-				
-				
-                //Axes
-                var axes = new THREE.AxisHelper();
-                axes.scale.set( 1000, 1000, 1000 );
-                scene.add( axes );
-                // renderer
-
-                //renderer = new THREE.WebGLRenderer( { antialias: false } );
-                //renderer.setClearColor(0x000);
-                //renderer.setSize(WIDTH, HEIGHT);
-
             }
+
 
             function onWindowResize() {
 
@@ -850,8 +756,9 @@
 
 
                         for (var datatype_index = 1; datatype_index <= 4; datatype_index++) {
-                            // draw only checked_datatype and checked_district
-                            if ($("input[type='checkbox'][value=" + datatype_index + "][name='datatype']").is(':checked') && $("input[type='checkbox'][value=" + jsonObj.dataTypeStats[index - 1].district_id + "][name='dist']").is(':checked')) {
+                            // draw only checked_datatype and checked_district and inside map
+                            if ($("input[type='checkbox'][value=" + datatype_index + "][name='datatype']").is(':checked') && $("input[type='checkbox'][value=" + jsonObj.dataTypeStats[index - 1].district_id + "][name='dist']").is(':checked')
+							&&Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2) {
                                 //console.log("curDistrict:"+curDistrict);
                                 //console.log("jsonObj.dataTypeStats[index-1].district_id :"+jsonObj.dataTypeStats[index-1].district_id );
                                 //bar position
@@ -1267,12 +1174,12 @@
                 requestAnimationFrame(animate);
                 //tween
                 TWEEN.update();
-                //camera
-                if (camera.position.y < 30) {
-                    camera.position.y = 40;
-                }
+				//zoom
+				if(camera.position.y<500&&camera){
+				}
+				
                 // update
-
+	
                 var date = new Date();
                 var time = date.getTime();
                 var timeDiff = time - lastTime;
@@ -1346,11 +1253,12 @@
              //get map tile, calculate lat, lng of tile
 
             function init_tiles(zoom) {
+				console.log("init_tile:"+zoom);
                 //proj = new MercatorProjection();
                 G = google.maps;
                 // get x y of the tile in selected lat-lng	
-                x_tile = long2tile(test_lng, zoom);
-                y_tile = lat2tile(test_lat, zoom);
+                x_tile = long2tile(map_center_lng, zoom);
+                y_tile = lat2tile(map_center_lat, zoom);
                 //get lat - lng of the center of the tile image fetched
                 tile_center_lng = tile2long(x_tile + 0.5, zoom); // + 0.5 to return center point , return NW corner by default 
                 tile_center_lat = tile2lat(y_tile + 0.5, zoom);
@@ -1360,14 +1268,61 @@
                 //SELng = tile2lat(x_tile+1,zoom);
                 //strDataURI = "http://b.tile.openstreetmap.org/"+zoom+"/"+x_tile+"/"+y_tile+".png";
                 console.log("zoom :" + zoom);
-                console.log("x_tile :" + long2tile(test_lng, zoom));
-                console.log("y_tile :" + lat2tile(test_lat, zoom));
+                console.log("x_tile :" + long2tile(map_center_lng, zoom));
+                console.log("y_tile :" + lat2tile(map_center_lat, zoom));
                 console.log("tile center long:" + tile2long(x_tile + 0.5, zoom));
                 console.log("tile center lat :" + tile2lat(y_tile + 0.5, zoom));
                 console.log("tile NW long:" + tile2long(x_tile, zoom));
                 console.log("tile NW lat :" + tile2lat(y_tile, zoom));
                 centerPoint = new G.LatLng(tile_center_lat, tile_center_lng);
+				
+				
             }
+			function draw_tiles() {
+			//group
+                group_plane = new THREE.Object3D();
+				//group_plane.castShadow=true;
+				//group_plane.receiveShadow=true;
+                
+                // plane
+                for (var i = -(TILE_MULTIPLE - 1) / 2; i <= (TILE_MULTIPLE - 1) / 2; i++) {
+                    for (var j = -(TILE_MULTIPLE - 1) / 2; j <= (TILE_MULTIPLE - 1) / 2; j++) {
+
+
+                        //texture
+                        //image = document.getElementById("myCanvas");
+
+                        //imageContext = image.getContext( '2d' );
+                        //imageContext.fillStyle = '#FF0000';
+                        //imageContext.fillRect(0,0,150,75);
+
+                        texture = new THREE.Texture(image);
+                        // material
+                        var material = new THREE.MeshLambertMaterial({
+                            map: THREE.ImageUtils.loadTexture(getURL(i, j)),
+                            //map: texture
+                            
+                            overdraw: true,
+                            opacity: 1,
+                            transparent: false
+                        });
+						//material.castShadow=true;
+						//material.receiveShadow=true;
+                        //console.log(getURL(i,j));
+                        plane = new THREE.Mesh(new THREE.PlaneGeometry(STATIC_MAP_WIDTH, STATIC_MAP_HEIGHT, 1, 1), material);
+                        plane.overdraw = true;
+                        plane.doubleSided = true;
+                        plane.position.z = -j * STATIC_MAP_HEIGHT;
+                        plane.position.x = i * STATIC_MAP_WIDTH;
+                        plane.rotation.x = -Math.PI / 2;
+                        plane.material.side = THREE.DoubleSide;
+						//plane.castShadow=true;
+						plane.receiveShadow=true;
+                        group_plane.add(plane);
+                    }
+                }
+                scene.add(group_plane);
+			}
              // GET URL OF TILE
 
             function getURL(x_offset, y_offset) {
@@ -1413,6 +1368,16 @@
                 //console.log(' NWLng: '+ NWLng);
                 coord.y = (STATIC_MAP_HEIGHT / 2) * ((lat - centerPoint.lat()) / (NWLat - centerPoint.lat()));
                 coord.x = (STATIC_MAP_WIDTH / 2) * ((lng - centerPoint.lng()) / (centerPoint.lng() - NWLng));
+            }
+			function CoordtoLatLng(x, y) {
+                //console.log(' PLANE_HEIGHT: '+ PLANE_HEIGHT);
+                //console.log(' PLANE_WIDTH: '+ PLANE_WIDTH);
+                //console.log(' centerPoint.lat(): '+ centerPoint.lat());
+                //console.log(' centerPoint.lng(): '+ centerPoint.lng());
+                console.log(' NWLat: '+ NWLat);
+                console.log(' NWLng: '+ NWLng);
+				map_center_lat = (y/(STATIC_MAP_HEIGHT / 2))*(NWLat - centerPoint.lat()) + centerPoint.lat();
+				map_center_lng = (x/(STATIC_MAP_HEIGHT / 2))*(centerPoint.lng() - NWLng) + centerPoint.lng();            
             }
         </script>
 		<!--Shader-->

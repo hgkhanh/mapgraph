@@ -1,253 +1,56 @@
-<!DOCTYPE HTML>
-<html>
-
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
 <head>
-<meta http-equiv="content-type" content="text/html; charset=UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link href="css/modern-responsive.css" rel="stylesheet">
-<title>3D visualization Web data statistics</title>
-<script type="text/javascript" src="js/threejs/three.js"></script>
-<script type="text/javascript" src="js/threejs/Detector.js"></script>
-<script type="text/javascript" src="js/threejs/TrackballControls.js"></script>
-<script type="text/javascript" src="js/threejs/OrbitControls.js"></script>
-<script type="text/javascript" src="js/threejs/stats.min.js"></script>
-<!-- modern ui lib -->
-<link rel="stylesheet" type="text/css" href="css/modern.css">
-<link href="css/modern-responsive.css" rel="stylesheet">
-<script type='text/javascript' src='js/tween.min.js'></script>
-<script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
-<script type="text/javascript" src="js/metroui/accordion.js"></script>
-<script type="text/javascript" src="js/metroui/buttonset.js"></script>
-<script type="text/javascript" src="js/metroui/calendar.js"></script>
-<script type="text/javascript" src="js/metroui/carousel.js"></script>
-<script type="text/javascript" src="js/metroui/dialog.js"></script>
-<script type="text/javascript" src="js/metroui/dropdown.js"></script>
-<script type="text/javascript" src="js/metroui/input-control.js"></script>
-<script type="text/javascript" src="js/metroui/rating.js"></script>
-<script type="text/javascript" src="js/metroui/slider.js"></script>
-<script type="text/javascript" src="js/metroui/pagecontrol.js"></script>
-<script type="text/javascript" src="js/metroui/tile-drag.js"></script>
-<script type="text/javascript" src="js/metroui/tile-slider.js"></script>
-<!-- <link rel="stylesheet" type="text/css" href="css/modern-responsive.css"> -->
-<!-- <link rel="stylesheet" type="text/css" href="css/theme-dark.css"> -->
+    <title>Smart Slider</title>
+
+    <script src="js/jquery-1.9.1.min.js" type="text/javascript"></script>
+
+    <script src="js/smartslider.js" type="text/javascript"></script>
+
+    <link href="css/smartslider.css" rel="stylesheet" type="text/css" />
+
+    <script type="text/javascript">
+        $(document).ready(function() {
+            $('#trackbar1').strackbar({ callback: onTick1, defaultValue: 4, sliderHeight: 4, sliderWidth: 300, style: 'style1', animate: true, ticks: true, labels: true, trackerHeight: 20, trackerWidth: 19 });
+            $('#trackbar2').strackbar({ callback: onTick2, defaultValue: 5, sliderHeight: 6, sliderWidth: 400, style: 'style2', animate: true, ticks: true, labels: true, trackerHeight: 23, trackerWidth: 23 });
+            $('#trackbar3').strackbar({ callback: onTick3, defaultValue: 6, sliderHeight: 19, sliderWidth: 500, style: 'style3', animate: true, ticks: true, labels: true, trackerHeight: 23, trackerWidth: 23 });
+        });
+        function onTick1(value) {
+            $('#text1').html("Current Value: " + value);
+        }
+        function onTick2(value) {
+            $('#text2').html("Current Value: " + value);
+        }
+        function onTick3(value) {
+            $('#text3').html("Current Value: " + value);
+        }
+    </script>
+
 </head>
-
-<body class="metrouicss" style="zoom: 1;">
-	<div id="form" style="width: 30%; margin: auto; float: left">
-		<!-- <input type="submit" value="Submit" id="button" />
-            <input type="reset" value="Reset" />-->
-		<!-- <h2>Form</h2> -->
-		<ul class="accordion" data-role="accordion">
-			<li class="active"><a href="#"> Quận/Huyện</a>
-
-				<div id="district" class="row">
-					<label class="input-control checkbox indeterminate"> <input
-						type="checkbox" id="dist_all" name="dist" value="dist_all">
-						<span class="helper"><b>Chọn tất cả</b></span>
-
-					</label>
-					<div id="districtFormContainer"
-						style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
-						<form id="distForm"></form>
-						<a class="button default" onClick="drawDistGraph()">View</a>
-					</div>
-				</div></li>
-			<li><a href="#"> Thống kê sử dụng </a>
-
-				<div id="dataFormContainer"
-					style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
-					<form id="dataForm">
-						<div id="datatype_col">
-							<h3>Loại dữ liệu</h3>
-						</div>
-						<div id="time_col">
-							<h3>Thời gian</h3>
-
-						</div>
-					</form>
-					<a class="button default" onClick="drawDatatypeGraph()">View</a>
-
-				</div>
-			<li><a href="#"> Đường phố </a>
-
-				<div id="seteetFormContainer"
-					style="-moz-column-count: 2; -webkit-column-count: 2; column-count: 2;">
-					<div class="input-control text">
-						<input type="text">
-						<button class="btn-clear" tabindex="-1" type="button"></button>
-					</div>
-					<a class="button default" onClick="drawDatatypeGraph()">View</a>
-				</div></li>
-		</ul>
-	</div>
-	<div id="container" style="width: 70%; margin: auto; float: left"></div>
-	<!-- form jquery -->
-	<script type="text/javascript">
-        	
-             //Get fieldName
-            $(document).ready(function () {
-            	responsive();
-                <!-- Show prgress cycle -->
-                $("#container").append("<img  src='./images/preloader-w8-line-black.gif'>");
-                <!-- SERVLET CALL -->				
-                //Check All checkbox
-                $("#dist_all").change(function () {
-                    if (this.checked) {
-                        console.log("dist_all checked");
-                        $("input[type='checkbox']").prop("checked", true);
-                    } else {
-                        console.log("dist_all unchecked");
-                        $("input[type='checkbox']").prop("checked", false);
-                    }
-                });
-                $.ajax({
-                    url: "./StatsGet",
-                    type: "GET",
-                    dataType: "text",
-                    //data:{num1:n1,num2:n2,},
-                }).success(function (data) {
-                    <!-- Remove prgress cycle -->
-                    $("#container").empty();
-                    console.log("done:" + data);
-                    jsonObj = eval("(" + data + ")");
-                    for (var index = 0; index < jsonObj.fieldNames.length; index++) {
-                        switch (jsonObj.fieldNames[index].type) {
-                            case 1:
-                                // district fieldName
-                                var label = $("<label >").attr({
-                                    class: 'input-control checkbox'
-                                });
-                                var input = $("<input >");
-                                input.attr({
-                                    type: 'checkbox',
-                                    name: 'dist',
-                                    value: jsonObj.fieldNames[index].id
-                                });
-                                var span = $("<span  style='overflow:hidden;'>").attr({
-                                    class: 'helper'
-                                });
-                                span.append(jsonObj.fieldNames[index].name);
-                                input.appendTo(label);
-                                span.appendTo(label);
-                                label.appendTo(distForm);
-                                $("#distForm").append("<br/>");
-                                break;
-                            case 3:
-                                // datatype fieldName
-                                var label = $("<label>").attr({
-                                    class: 'input-control checkbox'
-                                });
-                                var input = $("<input>");
-                                input.attr({
-                                    type: 'checkbox',
-                                    name: 'datatype',
-                                    value: jsonObj.fieldNames[index].id
-                                });
-                                var span = $("<span>").attr({
-                                    class: 'helper'
-                                });
-                                span.append(jsonObj.fieldNames[index].name);
-                                input.appendTo(label);
-                                span.appendTo(label);
-                                label.appendTo(datatype_col);
-                                $("#datatype_col").append("<br/>");
-                                break;
-                            case 4:
-                                // datatype fieldName
-                                var label = $("<label>").attr({
-                                    class: 'input-control checkbox'
-                                });
-                                var input = $("<input>");
-                                input.attr({
-                                    type: 'checkbox',
-                                    name: 'time',
-                                    value: jsonObj.fieldNames[index].id
-                                });
-                                var span = $("<span>").attr({
-                                    class: 'helper'
-                                });
-                                span.append(jsonObj.fieldNames[index].name);
-                                input.appendTo(label);
-                                span.appendTo(label);
-                                label.appendTo(time_col);
-                                $("#time_col").append("<br/>");
-                                break;
-                            default:
-                                break;
-                        }
-                    }
-                    $("#datatype_col").append("<br/>");
-                    $("#datatype_col").append("<br/>");
-                    $("#datatype_col").append("<br/>");
-                    $("#datatype_col").append("<br/>");
-                    $("input[type='checkbox'][name='dist']").prop('checked', true);
-					$("input[type='checkbox'][name='datatype']").prop('checked', true);
-                    $("input[type='checkbox']").change(function () {					
-                        console.log("check change,box " + $("input[type='checkbox'][value='4'][name='dist']").get(0).name + " length:" + $("input[type='checkbox'][value='4'][name='dist']").length + " is : " + $("input[type='checkbox'][value='4']")[0].checked);
-                        console.log("check change,box " + $(this).attr("name") + " is " + $(this).is(":checked"));
-                        if ($("input[type='checkbox']:not(:checked)").length == 1) {
-                            //console.log("1 unchecked");
-                            if ($("#dist_all").is(":not(:checked)")) {
-                                //console.log("and thats dist_all-> check dist_all now");y
-                                $("#dist_all").prop('checked', true);
-                            } else {
-                                console.log("uncheck idst_all now");
-                                $("#dist_all").prop('checked', false);
-                            }
-                        }
-                        //draw mapgraph
-						if($(this).attr("name")=="dist"){							
-							drawDistGraph();
-						}
-						else {
-							drawDatatypeGraph();
-						}
-                    });
-                    $(window).resize(function() {
-                    	console.log("body width:"+$('body').innerWidth() );
-                    	responsive();
-                    });
-                });
-            });
-            function responsive(){
-            	console.log("body width:"+$('body').innerWidth() );
-           	 	if($('body').innerWidth()>=1340){
-            		$("#districtFormContainer").css("-moz-column-count","3");
-            		$("#districtFormContainer").css("-webkit-column-count","3");
-            		$("#districtFormContainer").css("column-count","3");
-            		
-            		$("#dataFormContainer").css("-moz-column-count","3");
-            		$("#dataFormContainer").css("-webkit-column-count","3");
-            		$("#dataFormContainer").css("column-count","3");
-            	}
-            	if($('body').innerWidth()>=950&&$('body').innerWidth()<1340){
-            		$("#districtFormContainer").css("-moz-column-count","2");
-            		$("#districtFormContainer").css("-webkit-column-count","2");
-            		$("#districtFormContainer").css("column-count","2");
-            		
-            		$("#dataFormContainer").css("-moz-column-count","3");
-            		$("#dataFormContainer").css("-webkit-column-count","3");
-            		$("#dataFormContainer").css("column-count","3");
-            	}
-            	if($('body').innerWidth()<950){
-            		$("#districtFormContainer").css("-moz-column-count","1");
-            		$("#districtFormContainer").css("-webkit-column-count","1");
-            		$("#districtFormContainer").css("column-count","1");    
-            		
-            		$("#dataFormContainer").css("-moz-column-count","2");
-            		$("#dataFormContainer").css("-webkit-column-count","2");
-            		$("#dataFormContainer").css("column-count","2");
-            	}
-            	if($('body').innerWidth()<700){
-            		$("#dataFormContainer").css("-moz-column-count","1");
-            		$("#dataFormContainer").css("-webkit-column-count","1");
-            		$("#dataFormContainer").css("column-count","1");    
-            	}
-            	
-            }
-             
-           
-        </script>
+<body>
+    <div style="width: 690px; float: left; padding: 20px;">
+        <div style="position: relative">
+            <div id="trackbar1">
+            </div>
+            <div id="text1" style="clear: both; width: 300px; text-align: center;">
+            </div>
+        </div>
+        <div style="clear: both;height:20px;">
+        </div>
+        <div style="position: relative">
+            <div id="trackbar2">
+            </div>
+            <div id="text2" style="clear: both; width: 400px; text-align: center;">
+            </div>
+        </div>
+        <div style="clear: both;height:20px;">
+        </div>
+        <div style="position: relative">
+            <div id="trackbar3">
+            </div>
+            <div id="text3" style="clear: both; width: 600px; text-align: center;margin-top:4px;">
+            </div>
+        </div>
+    </div>
 </body>
-
 </html>
