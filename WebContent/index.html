@@ -34,7 +34,6 @@
         <script type="text/javascript" src="js/metroui/pagecontrol.js"></script>
         <script type="text/javascript" src="js/metroui/tile-drag.js"></script>
         <script type="text/javascript" src="js/metroui/tile-slider.js"></script>
-		
 		<!--  css -->
         <!-- <link rel="stylesheet" type="text/css" href="css/modern-responsive.css"> -->
         <!-- <link rel="stylesheet" type="text/css" href="css/theme-dark.css"> -->
@@ -44,18 +43,34 @@
         <div id="container" style="width: 70%; margin: auto; float: left; z-index: -10; position: relative"></div>
        
 		<div id="form" style="width: 30%; margin: auto; float: right;z-index: 200; position: relative;background-color: rgba(255,255,255,0.5);">
-            <!-- <input type="submit" value="Submit" id="button" />
-            <input type="reset" value="Reset" />-->
-            <!-- <h2>Form</h2> -->			
-			
-			<div style="position: relative;margin:10px;">
-					<a href="#"> Zoom : </a><a href="#" id="zoom_slide_text"></a>
-					<div id="zoom_slider" class="slider" data-role="slider" data-param-init-value="20" data-param-accuracy="20"></div>
+			<div id="zoom_place_holder" style="position: relative;margin:10px;">
+					<a href="#" onClick="centerCamera()"> Zoom : </a><a href="#" id="zoom_slider_text">13</a>
+					<div id='zoom_slider' class='slider' data-role='slider' data-param-init-value='20'data-param-accuracy='20'></div>
 			</div>
 			<ul class="accordion" data-role="accordion" style="position: relative;margin:10px">
-				<li class="active"><a href="#"> Quận/Huyện</a>
-
+				
+				<li class="active"><a href="#"> Tuỳ Chọn</a>					
 					<div id="district" class="row">
+					
+					<div id="dataFormContainer" style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">						
+						<form id="dataForm">
+							<div id="datatype_col">
+									<h3>Loại dữ liệu</h3>
+									<label class="input-control checkbox indeterminate">
+										<input type="checkbox" id="datatype_all" value="datatype_all">	<span class="helper"><b>Tổng hợp</b></span>
+									</label>
+							</div>
+							<div id="time_col">
+									<h3>Thời gian</h3>
+							<label class="input-control checkbox indeterminate">
+								<input type="checkbox" id="time_all" name="time" value="time_all">	<span class="helper"><b>Chọn tất cả</b></span>
+
+							</label>
+							</div>
+						</form>	
+
+					</div>
+					<h3> Quận/Huyện</h3>
 						<label class="input-control checkbox indeterminate">
 							<input type="checkbox" id="dist_all" name="dist" value="dist_all">	<span class="helper"><b>Chọn tất cả</b></span>
 
@@ -65,28 +80,9 @@
 
 						</div>
 					</div>
-				</li>
-				<li><a href="#"> Thống kê sử dụng </a>
-
-					<div id="dataFormContainer" style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
-						<form id="dataForm">
-							<div id="datatype_col">
-									<h3>Loại dữ liệu</h3>
-
-							</div>
-							<div id="time_col">
-									<h3>Thời gian</h3>
-							<label class="input-control checkbox indeterminate">
-								<input type="checkbox" id="time_all" name="time" value="time_all">	<span class="helper"><b>Chọn tất cả</b></span>
-
-							</label>
-							</div>
-						</form>	<a class="button default" onClick="drawDatatypeGraph()">View</a>
-
-					</div>
-					<li><a href="#"> Đường phố </a>
 
 						<div id="seteetFormContainer" style="-moz-column-count: 2; -webkit-column-count: 2; column-count: 2;">
+						<h3> Đường phố</h3>
 							<div class="input-control text">
 								<input type="text">
 								<button class="btn-clear" tabindex="-1" type="button"></button>
@@ -94,6 +90,7 @@
 	
 
 						</div>
+				
 					</li>
 					
 					
@@ -102,6 +99,7 @@
         </div>
         <!-- form jquery -->
         <script type="text/javascript">
+			var strColorsJSON ;
             // field showed var
             var images_group = [];
             var images15 = new Array();
@@ -121,6 +119,7 @@
             var BAR_HEIGHT_MULTIPLE_DATATYPE = 5;
             var BAR_WIDTH_DATATYPE_SPACE = 1;
             var BAR_WIDTH_MULTIPLE = 1;
+			var DOME_RADIUS=6000;
             var angularSpeed = 0.01; // revolutions per second
             var lastTime = 0;
             if (!Detector.webgl) Detector.addGetWebGLMessage();
@@ -164,11 +163,14 @@
             latLngToCoord(map_center_lat, map_center_lng);
             console.log("cube pos :" + coord.x + ":" + coord.y);
              //Get fieldName
-            $(document).ready(function () {
+            $(document).ready(function () {			
+				$.getJSON("colors.json", function(data) {
 					
+					strColorsJSON = data; 
+				});
 				// handle responsive layout when resize window
 				responsive();
-                <!-- Show prgress cycle -->
+				 <!-- Show prgress cycle -->
                 $("#container").append("<img  src='./images/preloader-w8-line-black.gif'>");
                 <!-- SERVLET CALL -->				
                 //Check All checkbox
@@ -190,6 +192,7 @@
                         $("input[type='checkbox'][name='time']").prop("checked", false);
                     }
                 });
+				
                 $.ajax({
                     url: "./StatsGet",
                     type: "GET",
@@ -198,7 +201,7 @@
                 }).success(function (data) {
                     <!-- Remove prgress cycle -->
                     $("#container").empty();
-                    //console.log("done:" + data);
+                    console.log("done:\n" + data);
                     jsonObj = eval("(" + data + ")");
                     for (var index = 0; index < jsonObj.fieldNames.length; index++) {
                         switch (jsonObj.fieldNames[index].type) {
@@ -269,10 +272,13 @@
                     $("#datatype_col").append("<br/>");
                     $("#datatype_col").append("<br/>");
                     $("#datatype_col").append("<br/>");
-                    $("#datatype_col").append("<br/>");
+                    $("#datatype_col").append("<br/>");					
                     $("input[type='checkbox'][name='dist']").prop('checked', true);
                     $("input[type='checkbox'][name='time']").prop('checked', true);
-                    $("input[type='checkbox'][name='datatype']").prop('checked', true);					;
+                    $("input[type='checkbox'][name='datatype']").attr("disabled", true);
+					$("input[type='checkbox'][name='datatype']").prop('checked', false);	
+					$("#datatype_all").prop('checked', true);
+					
                     init();
 					draw_tiles();
 					graph();
@@ -286,13 +292,20 @@
 						console.log("zoom_slider changed:"+val);
 						
 						zoom=val/20+12;
+						$("#zoom_slider_text").text(zoom);
 						switch (zoom) {
-						case 13:
+						case 13: case 12:
 							BAR_WIDTH_MULTIPLE = 1;
+							TILE_MULTIPLE = 9;
+							break;
 						case 14:
 							BAR_WIDTH_MULTIPLE = 0.8;
-						case 15:
-							BAR_WIDTH_MULTIPLE = 0.6;						
+							TILE_MULTIPLE = 11;
+							break;
+						case 15:case 16: case 17:
+							BAR_WIDTH_MULTIPLE = 0.6;	
+							TILE_MULTIPLE = 11;
+							break;					
 						}
 						init_tiles(zoom); 
 						init();	
@@ -303,37 +316,41 @@
 					// "check all" check box
 					 // district check_all
                     $("input[type='checkbox'][name='dist']").change(function () {
-                        //console.log("check change,box " + $("input[type='checkbox'][value='4'][name='dist']").get(0).name + " length:" + $("input[type='checkbox'][value='4'][name='dist']").length + " is : " + $("input[type='checkbox'][value='4']")[0].checked);
-                        console.log("check change,box " + $(this).attr("name") + " " + $(this).attr("value") + " is " + $(this).is(":checked"));
-                        if ($("input[type='checkbox'][name='dist']:not(:checked)").length == 1) {
-                            //console.log("1 unchecked");
+                         if ($("input[type='checkbox'][name='dist']:not(:checked)").length == 1) {
+                            // 1 cb is unchecked
                             if ($("#dist_all").is(":not(:checked)")) {
-                                //console.log("and thats dist_all-> check dist_all now");y
+                                //and thats dist_all -> check dist_all now
                                 $("#dist_all").prop('checked', true);
                             } else {
+								//nope, not dist_all -> uncheck dist_all now
                                 console.log("uncheck idst_all now");
                                 $("#dist_all").prop('checked', false);
                             }
                         }
                         //draw mapgraph
-                        graph();
+						if(graphtype_flag <= 2){
+							drawDistGraph();
+						}else{
+							drawStreetGraph();
+						}
                     });
-					//street check_all
-					$("input[type='checkbox'][name='time']").change(function () {
-                        //console.log("check change,box " + $("input[type='checkbox'][value='4'][name='dist']").get(0).name + " length:" + $("input[type='checkbox'][value='4'][name='dist']").length + " is : " + $("input[type='checkbox'][value='4']")[0].checked);
-                        console.log("check change,box " + $(this).attr("name") + " " + $(this).attr("value") + " is " + $(this).is(":checked"));
-                        if ($("input[type='checkbox'][name='time']:not(:checked)").length == 1) {
-                            //console.log("1 unchecked");
-                            if ($("#time_all").is(":not(:checked)")) {
-                                //console.log("and thats dist_all-> check dist_all now");y
-                                $("#time_all").prop('checked', true);
+					//datatype_all
+					$("#datatype_all").change(function () {
+                            if ($("#datatype_all").is(":not(:checked)")) {
+                                console.log("enable datatypes cb");
+                                $("input[type='checkbox'][name='datatype']").attr("disabled", false);	
+								$("input[type='checkbox'][name='datatype']").prop('checked', true);	
                             } else {
-                                console.log("uncheck idst_all now");
-                                $("#time_all").prop('checked', false);
-                            }
-                        }
+                                console.log("disable datatypes cb");
+                                $("input[type='checkbox'][name='datatype']").attr("disabled", true);
+								
+                            }                        
                         //draw mapgraph
-                        graph();
+						if(graphtype_flag <= 2){
+							drawDistGraph();
+						}else{
+							drawStreetGraph();
+						}
                     });
                     $(window).resize(function () {
                         //console.log("body width:" + $('body').innerWidth());
@@ -382,88 +399,210 @@
             }
 			
 			
-
-             <!--  Three js Script -->
-			
-            function drawStreetGraph() {
-                BAR_WIDTH = 10;
-                BAR_HEIGHT_MULTIPLE_DATATYPE = 20;
-                zoom = 15;
-                switch (zoom) {
-                case 13:
-                    BAR_WIDTH_MULTIPLE = 1;
-                case 14:
-                    BAR_WIDTH_MULTIPLE = 0.8;
-                case 15:
-                    BAR_WIDTH_MULTIPLE = 0.6;
-                };
-                camera.position.y = 100;
-                camera.position.z = 100;
-                TILE_MULTIPLE = 11;
+			<!--  zoom -->
+			function centerCamera(){
+				map_center_lat = 21.0357;
+                map_center_lng = 105.8261;
+				camera.position.y = 1800;
+                camera.position.z = 1800;
+				camera.position.x = 0;
+				camera.lookAt(0,0,0);
+			}
+			function changeZoomLvl(level){
 				
+				if((level<=16)&&(level>=12)){
+					if(zoom!=level){
+					//replace slider  with new one
+						$("#zoom_slider").data('slider').val((level-12)*20);
+						//(level-12)*20						
+						zoom=level;
+						
+						$("#zoom_slider_text").text(zoom);
+						switch (zoom) {
+						case 13: case 12:
+							BAR_WIDTH = 40;
+							BAR_WIDTH_MULTIPLE = 1;
+							TILE_MULTIPLE = 9;
+							break;
+						case 14:
+							BAR_WIDTH = 30;
+							BAR_WIDTH_MULTIPLE = 0.8;
+							TILE_MULTIPLE = 11;
+							break;
+						case 15:case 16: case 17:
+							BAR_WIDTH = 20;
+							BAR_WIDTH_MULTIPLE = 0.6;	
+							TILE_MULTIPLE = 11;
+							break;
+						}
+					}
+				}
+				console.log("11<zoom<17");
+			}
+            <!--  Three js Script -->
+			function drawStreetGraph(){
+				if ($("#datatype_all").is(":not(:checked)")) {
+					drawDatatypeStreetGraph();
+				}else{
+					drawStreetAllGraph();
+				}
+			}
+			function drawStreetAllGraph() {
+				$("input[type='checkbox'][name='datatype']").prop('checked', false);	
+				$("#datatype_all").prop('checked', true);
+				switch (zoom) {
+				case 13: case 12:
+					BAR_WIDTH = 40;
+					BAR_WIDTH_MULTIPLE = 1;
+					TILE_MULTIPLE = 9;
+					break;
+				case 14:
+					BAR_WIDTH = 30;
+					BAR_WIDTH_MULTIPLE = 0.8;
+					TILE_MULTIPLE = 11;
+					break;
+				case 15:case 16: case 17:
+					BAR_WIDTH = 20;
+					BAR_WIDTH_MULTIPLE = 0.6;	
+					TILE_MULTIPLE = 11;
+					break;
+				}
+                BAR_HEIGHT_MULTIPLE_DATATYPE = 20;
+				console.log("value:"+$("#zoom_slider").attr("data-param-init-value"));
+                changeZoomLvl(16);
+				map_center_lat = 21.02811;
+				map_center_lng = 105.853186;
+                TILE_MULTIPLE = 11;
+                if (graphtype_flag <= 2) {
+                    graphtype_flag = 4;
+					console.log("zoom:"+zoom);
+                    init_tiles(zoom);
+					init();
+					draw_tiles();
+					
+                }
+				
+                graphtype_flag = 4;  
+				
+                graph();
+                animate();
+            }
+            function drawDatatypeStreetGraph() {
+				$("input[type='checkbox'][name='datatype']").prop('checked', true);	
+				$("#datatype_all").prop('checked', false);
+                switch (zoom) {
+				case 13: case 12:
+					BAR_WIDTH = 40;
+					BAR_WIDTH_MULTIPLE = 1;
+					TILE_MULTIPLE = 9;
+					break;
+				case 14:
+					BAR_WIDTH = 30;
+					BAR_WIDTH_MULTIPLE = 0.8;
+					TILE_MULTIPLE = 11;
+					break;
+				case 15:case 16: case 17:
+					BAR_WIDTH = 20;
+					BAR_WIDTH_MULTIPLE = 0.6;	
+					TILE_MULTIPLE = 11;
+					break;
+				}
+				console.log("value:"+$("#zoom_slider").attr("data-param-init-value"));
+                changeZoomLvl(16);
+				map_center_lat = 21.02811;
+				map_center_lng = 105.853186;
                 if (graphtype_flag != 3) {
                     graphtype_flag = 3;
+					console.log("zoom:"+zoom);
                     init_tiles(zoom);
+					init();
+					draw_tiles();
+					
                 }
-				init();
-				draw_tiles();
-                graphtype_flag = 3;                
-                graph();
-                animate();
-            }
-
-            function drawDistGraph() {
-                BAR_WIDTH = 30;
-                BAR_HEIGHT_MULTIPLE_DATATYPE = 10;
-                zoom = 13;
-                switch (zoom) {
-                case 13:
-                    BAR_WIDTH_MULTIPLE = 1;
-                case 14:
-                    BAR_WIDTH_MULTIPLE = 0.8;
-                case 15:
-                    BAR_WIDTH_MULTIPLE = 0.6;
-                };
-                camera.position.y = 1300;
-                camera.position.z = 1300;
-                TILE_MULTIPLE = 11;
 				
-                if (graphtype_flag == 3) {
+                graphtype_flag = 3;  
+				
+                graph();
+                animate();
+            }
+			function drawDistGraph() {
+				if ($("#datatype_all").is(":not(:checked)")) {
+					drawDistDatatypeGraph();
+				}else{
+					drawDistAllGraph();
+				}
+			}
+            function drawDistAllGraph() {
+				$("input[type='checkbox'][name='datatype']").prop('checked', false);	
+				$("#datatype_all").prop('checked', true);
+				map_center_lat = 21.0357;
+				map_center_lng = 105.8261;
+				switch (zoom) {
+				case 13: case 12:
+					BAR_WIDTH = 40;
+					BAR_WIDTH_MULTIPLE = 1;
+					TILE_MULTIPLE = 9;
+					break;
+				case 14:
+					BAR_WIDTH = 30;
+					BAR_WIDTH_MULTIPLE = 0.8;
+					TILE_MULTIPLE = 11;
+					break;
+				case 15:case 16: case 17:
+					BAR_WIDTH = 20;
+					BAR_WIDTH_MULTIPLE = 0.6;	
+					TILE_MULTIPLE = 11;
+					break;
+				}
+                changeZoomLvl(13);
+                if (graphtype_flag >=3) {
                     graphtype_flag = 1;
+					console.log("init_tiles");
                     init_tiles(zoom);
-                }
-				init();
-				draw_tiles();
-                graphtype_flag = 1;
-               
-
+					init();		
+					draw_tiles();
+					
+                }						
+                graphtype_flag = 1; 
                 graph();
                 animate();
             }
 
-            function drawDatatypeGraph() {
-                BAR_WIDTH = 30;
-                BAR_HEIGHT_MULTIPLE_DATATYPE = 10;
-                zoom = 13;
-                switch (zoom) {
-                case 13:
-                    BAR_WIDTH_MULTIPLE = 1;
-                case 14:
-                    BAR_WIDTH_MULTIPLE = 0.8;
-                case 15:
-                    BAR_WIDTH_MULTIPLE = 0.6;
-                };
-                camera.position.y = 1300;
-                camera.position.z = 1300;
-                TILE_MULTIPLE = 11;
-                graphtype_flag = 2;
-                if (graphtype_flag == 3) {
+            function drawDistDatatypeGraph() {
+				$("input[type='checkbox'][name='datatype']").prop('checked', true);	
+				$("#datatype_all").prop('checked', false);
+				map_center_lat = 21.0357;
+				map_center_lng = 105.8261;
+				switch (zoom) {
+				case 13: case 12:
+					BAR_WIDTH = 40;
+					BAR_WIDTH_MULTIPLE = 1;
+					TILE_MULTIPLE = 9;
+					break;
+				case 14:
+					BAR_WIDTH = 30;
+					BAR_WIDTH_MULTIPLE = 0.8;
+					TILE_MULTIPLE = 11;
+					break;
+				case 15:case 16: case 17:
+					BAR_WIDTH = 20;
+					BAR_WIDTH_MULTIPLE = 0.6;	
+					TILE_MULTIPLE = 11;
+					break;
+				}
+                changeZoomLvl(13);
+				
+                
+                if (graphtype_flag >=3) {
+					console.log("init_tiles");
                     graphtype_flag = 2;
                     init_tiles(zoom);
+					init();	
+					draw_tiles();
+						
                 }
                 graphtype_flag = 2;
-                init();
-				draw_tiles();
+               		
                 graph();
                 animate();
             }
@@ -472,8 +611,10 @@
                 console.log("init :" + graphtype_flag);
 				//CAMERA
 				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 15000);
-                camera.position.y = 1300;
-                camera.position.z = 1300;
+                camera.position.y = 1800;
+                camera.position.z = 1800;
+				camera.position.x = 0;
+				camera.lookAt(0,0,0); 
                 //camera.rotation.x = 45 * (Math.PI / 180);
                 // set some camera attributes
                 //var VIEW_ANGLE = 45,
@@ -498,22 +639,16 @@
                
 				//SCENE
                 scene = new THREE.Scene();
-				//scene.fog = new THREE.Fog( 0xffffff, 1000, 10000 );
+				scene.fog = new THREE.Fog( 0xffffff, 500, 19000 );
                 
 
 
                 // CONTROL
                 controls = new THREE.OrbitControls( camera );
 				controls.addEventListener( 'change', render );
-                controls.rotateSpeed = 1.0;
-                controls.zoomSpeed = 1.2;
-                controls.panSpeed = 0.1;
-                controls.staticMoving = false;
-                controls.dynamicDampingFactor = 1.6;
-                controls.keys = [65, 83, 68];
-				controls.maxPolarAngle = Math.PI/2; 
-				controls.maxDistance = 4000;				
-				
+				controls.maxPolarAngle = (Math.PI/2)*90/100; 
+				controls.maxDistance = STATIC_MAP_HEIGHT*TILE_MULTIPLE/1.4;				
+				console.log("controls.maxDistance"+controls.maxDistance);
 				//LIGHT
 				
                 // add subtle ambient lighting
@@ -522,7 +657,7 @@
                 // add directional light source
                 var directionalLight = new THREE.DirectionalLight(0xffffff,0.1);
                 directionalLight.position.set(-1000, 3000, -2000);
-				directionalLight.shadowCameraVisible = true;       
+				//directionalLight.shadowCameraVisible = true;       
                 directionalLight.target.position.set(0, 0, 0);
                 directionalLight.castShadow = true;
 				directionalLight.shadowDarkness = 0.5;
@@ -535,46 +670,8 @@
 				directionalLight.shadowMapWidth=Math.pow(2,12);
 				directionalLight.shadowMapHeight=Math.pow(2,12);
 				directionalLight.shadowBias=-0.0008;
-                scene.add(directionalLight);
+                scene.add(directionalLight);				
 				
-				
-				
-				/*var directionalLight = new THREE.DirectionalLight(0xffffff,0.1);
-                directionalLight.position.set(-1000, 2000, -2000);
-                directionalLight.target.position.set(0, 0, 0);
-                directionalLight.shadowCameraVisible = true;
-                directionalLight.castShadow = true;
-				directionalLight.shadowDarkness = 0.5;
-				directionalLight.shadowCameraNear    =  500;
-				directionalLight.shadowCameraFar    =  4000;
-				directionalLight.shadowCameraRight     =  500;
-				directionalLight.shadowCameraLeft     = -500;
-				directionalLight.shadowCameraTop      =  500;
-				directionalLight.shadowCameraBottom   = -500;
-                scene.add(directionalLight);	
-				
-				var directionalLight = new THREE.DirectionalLight(0xffffff,0.1);
-                directionalLight.position.set(-1000, 2000, -2000);
-                directionalLight.target.position.set(0, 0, 0);
-                directionalLight.shadowCameraVisible = true;
-                directionalLight.castShadow = true;
-				directionalLight.shadowDarkness = 0.5;
-				directionalLight.shadowCameraNear    =  500;
-				directionalLight.shadowCameraFar    =  4000;
-				directionalLight.shadowCameraRight     =  500;
-				directionalLight.shadowCameraLeft     = -500;
-				directionalLight.shadowCameraTop      =  500;
-				directionalLight.shadowCameraBottom   = -500;
-                scene.add(directionalLight);		*/
-                /*var spotLight = new THREE.SpotLight(0xffffff, 0.05);
-                spotLight.position.set(-2000, 2000, -4000);
-                spotLight.target.position.set(0, 0, 0);
-				spotLight.shadowCameraVisible = true;
-                spotLight.castShadow = true;
-				spotLight.shadowDarkness = 0.5;
-                spotLight.shadowCameraNear = 500;
-                spotLight.shadowCameraFar = 10000;
-                scene.add(spotLight);*/
 				//hemiLight
 				hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.05 );
 				hemiLight.color.setHSL( 0.6, 1, 0.75 );
@@ -599,7 +696,7 @@
 				
 
                 window.addEventListener('resize', onWindowResize, false);
-				var skyDome = new THREE.Mesh(new THREE.SphereGeometry( 5000, 32, 15,0,Math.PI*2 ),new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture('images/sky_lightblue_1000.jpg'), side: THREE.BackSide }))
+				var skyDome = new THREE.Mesh(new THREE.SphereGeometry( DOME_RADIUS *120/100, 32, 15,0,Math.PI*2 ),new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture('images/sky_lightblue_1000.jpg'), side: THREE.BackSide }))
 				skyDome.rotation.y = Math.PI;
 				scene.add(skyDome);
 				
@@ -611,7 +708,7 @@
 				
 				// big/base  plane 
                 // material
-                plane = new THREE.Mesh(new THREE.CircleGeometry( 5000, 20, 0, Math.PI * 2 ), new THREE.MeshLambertMaterial({
+                plane = new THREE.Mesh(new THREE.CircleGeometry( DOME_RADIUS, 20, 0, Math.PI * 2 ), new THREE.MeshLambertMaterial({
                     map: THREE.ImageUtils.loadTexture('images/land.jpg'),	
 					overdraw: true
                 }));
@@ -653,7 +750,20 @@
                     console.log("drawDistGraph");
                     //console.log(jsonObj.streetStats[jsonObj.streetStats.length-1].datatype_count[jsonObj.streetStats[jsonObj.streetStats.length-1].datatype_count.length-1]);
 
-                    // draw district graph
+                    // DRAW district graph
+					//find max value to set HEIGHT_MULTIPLE
+					var max_height=0;					
+					for (var index = 0; index < jsonObj.districtStats.length; index++) {
+						if(max_height<jsonObj.districtStats[index].data+0.1){
+							max_height=jsonObj.districtStats[index].data+0.1;
+						}
+					}
+					
+					BAR_HEIGHT_MULTIPLE = (DOME_RADIUS/7)/max_height;
+					console.log("max_height:"+max_height);
+					console.log("BAR_HEIGHT_MULTIPLE:"+BAR_HEIGHT_MULTIPLE);
+					//loop through Stats Item to draw
+					var randomColorSet=randomSet(jsonObj.districtStats.length);			
                     for (var index = 0; index < jsonObj.districtStats.length; index++) {
 
                         //console.log("district_id:"+jsonObj.districtStats[index].district_id);
@@ -664,9 +774,10 @@
                             // random startMultipler
                             startMultipler = Math.random() * (max - min) + min;
                             var geometry = new THREE.CubeGeometry(1, 1, 1);			
-							var color_code=Math.random() * 0xffffff;							
+									
+							//console.log(randomColorSet[index]);
                             for (var i = 0; i < geometry.faces.length; i++) {
-                                geometry.faces[i].color.setHex(color_code);
+                                geometry.faces[i].color.setHex(randomColorSet[index]);
                             }
 
                             var material = new THREE.MeshLambertMaterial({
@@ -714,7 +825,16 @@
                         countSurveyAUD = 0,
                         countSurveyVID = 0,
                         curDistrict;
+					//find max value to set HEIGHT_MULTIPLE
+					var max_height=0;					
+					for (var index = 0; index < jsonObj.districtStats.length; index++) {
+						if(max_height<jsonObj.districtStats[index].data+0.1){
+							max_height=jsonObj.districtStats[index].data+0.1;
+						}
+					}
+					BAR_HEIGHT_MULTIPLE_DATATYPE = (DOME_RADIUS/7)/max_height;
                     //loop thourgh dataTypeStats Item
+					var randomColorSet=randomSet((jsonObj.dataTypeStats.length)/44);	
                     for (var index = 0; index < jsonObj.dataTypeStats.length; index++) {
                         countSurveyTXT = 0.1, countSurveyIMG = 0.1, countSurveyAUD = 0.1, countSurveyVID = 0.1, curDistrict = jsonObj.dataTypeStats[index].district_id;
 
@@ -754,7 +874,7 @@
                             index++;
                         }
 
-
+								
                         for (var datatype_index = 1; datatype_index <= 4; datatype_index++) {
                             // draw only checked_datatype and checked_district and inside map
                             if ($("input[type='checkbox'][value=" + datatype_index + "][name='datatype']").is(':checked') && $("input[type='checkbox'][value=" + jsonObj.dataTypeStats[index - 1].district_id + "][name='dist']").is(':checked')
@@ -762,12 +882,11 @@
                                 //console.log("curDistrict:"+curDistrict);
                                 //console.log("jsonObj.dataTypeStats[index-1].district_id :"+jsonObj.dataTypeStats[index-1].district_id );
                                 //bar position
-
                                 switch (datatype_index) {
                                 case 1:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+                                        geometry.faces[i].color.setHex(randomColorSet[jsonObj.dataTypeStats[index - 1].district_id-1]);
                                     }
                                     var material = new THREE.MeshPhongMaterial({
                                         vertexColors: THREE.FaceColors
@@ -807,7 +926,7 @@
                                 case 2:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+                                        geometry.faces[i].color.setHex(randomColorSet[jsonObj.dataTypeStats[index - 1].district_id-1]);
                                     }
                                     var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
@@ -846,7 +965,7 @@
                                 case 3:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+                                        geometry.faces[i].color.setHex(randomColorSet[jsonObj.dataTypeStats[index - 1].district_id-1]);
                                     }
                                     var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
@@ -887,7 +1006,7 @@
                                 case 4:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+                                        geometry.faces[i].color.setHex(randomColorSet[jsonObj.dataTypeStats[index - 1].district_id-1]);
                                     }
                                     var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
@@ -938,7 +1057,7 @@
                     }
                     break;
                 case 3:
-                    console.log("drawStreetGraph");
+                    console.log("drawDatatypeStreetGraph");
                     // draw district graph
                     // draw datatype stats graph
                     //loop thourgh dataTypeStats Item
@@ -987,20 +1106,21 @@
                             }
 
                         }
-
+						//var randomColorSet=randomSet(jsonObj.districtStats.length);			
                         for (var datatype_index = 1; datatype_index <= 4; datatype_index++) {
-
+							
                             // draw only checked_datatype & checked_district & inside map
                             if ($("input[type='checkbox'][value=" + datatype_index + "][name='datatype']").is(':checked') && $("input[type='checkbox'][value=" + jsonObj.streetStats[index].district_id + "][name='dist']").is(':checked')
-							&&Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2) {
+							&&Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2&&Math.abs(coord.y)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2) {
                                
                                 //console.log("jsonObj.dataTypeStats[index-1].district_id :"+jsonObj.dataTypeStats[index-1].district_id );
                                 //bar position
+								
                                 switch (datatype_index) {
                                 case 1:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+                                        geometry.faces[i].color.setHex(Math.random()*0xffffff);
                                     }
                                     var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
@@ -1040,7 +1160,7 @@
                                 case 2:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+                                        geometry.faces[i].color.setHex(Math.random()*0xffffff);
                                     }
                                     var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
@@ -1079,7 +1199,7 @@
                                 case 3:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+                                        geometry.faces[i].color.setHex(Math.random()*0xffffff);
                                     }
                                     var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
@@ -1119,7 +1239,7 @@
                                 case 4:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(Math.random() * 0xffffff);
+                                        geometry.faces[i].color.setHex(Math.random()*0xffffff);
                                     }
                                     var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
@@ -1165,7 +1285,81 @@
                         }                   
                     }
                     break;
-                default:
+                case 4:
+                    console.log("drawStreetAllGraph");
+                    //console.log(jsonObj.streetStats[jsonObj.streetStats.length-1].datatype_count[jsonObj.streetStats[jsonObj.streetStats.length-1].datatype_count.length-1]);
+
+                    // DRAW district graph
+					//find max value to set HEIGHT_MULTIPLE
+					var max_height=0;					
+					console.log("jsonObj.streetStats.length:"+jsonObj.streetStats.length);
+					for (var index = 0; index < jsonObj.streetStats.length; index++) {
+						latLngToCoord(jsonObj.streetStats[index].lat, jsonObj.streetStats[index].lng);
+						if ((Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2&&Math.abs(coord.y)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2)
+						   &&(max_height<jsonObj.streetStats[index].count+0.1)){
+							max_height=jsonObj.streetStats[index].count+0.1;
+						}
+					}
+					BAR_HEIGHT_MULTIPLE = (DOME_RADIUS/7)/max_height;
+					console.log("max_height:"+max_height);
+					console.log("BAR_HEIGHT_MULTIPLE:"+BAR_HEIGHT_MULTIPLE);
+					//loop through Stats Item to draw
+					var randomColorSet=randomSet(jsonObj.streetStats.length);			
+                    for (var index = 0; index < jsonObj.streetStats.length; index++) {
+
+                        //console.log("district_id:"+jsonObj.streetStats[index].district_id);
+                        //console.log("checkbox is:"+$("input[type='checkbox'][value="+jsonObj.streetStats[index].district_id+"]").is(':checked'));
+                        // draw if street is inside map and district is checked
+						latLngToCoord(jsonObj.streetStats[index].lat, jsonObj.streetStats[index].lng);
+						if ($("input[type='checkbox'][value=" + jsonObj.streetStats[index].district_id + "][name='dist']").is(':checked')
+						&&Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2&&Math.abs(coord.y)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2) {                            
+                            //console.log(jsonObj.streetStats[index].data);	
+                            // random startMultipler
+                            startMultipler = Math.random() * (max - min) + min;
+                            var geometry = new THREE.CubeGeometry(1, 1, 1);			
+									
+							console.log("BAR_WIDTH"+BAR_WIDTH);
+                            for (var i = 0; i < geometry.faces.length; i++) {
+                                geometry.faces[i].color.setHex(Math.random()*0xffffff);
+                            }
+
+                            var material = new THREE.MeshLambertMaterial({
+                                vertexColors: THREE.FaceColors
+                            });
+                            var cube = new THREE.Mesh(geometry, material);
+                            cube.scale.x = BAR_WIDTH;
+                            cube.scale.y = (jsonObj.streetStats[index].count + 0.1) * BAR_HEIGHT_MULTIPLE * startMultipler;
+                            cube.scale.z = BAR_WIDTH;
+                            cube.position.z = -coord.y;
+                            cube.position.x = coord.x;
+                            cube.position.y = cube.scale.y / 2;
+							//shadow
+							cube.castShadow=true;
+							cube.receiveShadow=true;
+                            // tween
+                            var cubeItem = {
+                                y: (jsonObj.streetStats[index].count + 0.1) * BAR_HEIGHT_MULTIPLE * startMultipler,
+                                mesh: cube
+                            };
+
+                            var updateCallback = function () {
+                                this.mesh.scale.y = this.y;
+                                this.mesh.position.y = this.mesh.scale.y / 2;
+                            }
+                            var tween = new TWEEN.Tween(cubeItem)
+                                .to({
+                                y: jsonObj.streetStats[index].count * BAR_HEIGHT_MULTIPLE
+                            }, 2000)
+                                .delay(0)
+                                .onUpdate(updateCallback)
+                                .easing(TWEEN.Easing.Elastic.Out)
+                                .start();
+                            group_cube.push(cube);
+                            scene.add(cube);
+                        }
+                    }
+                    break;
+				default:
                     break;
                 }
             }
@@ -1175,6 +1369,15 @@
                 //tween
                 TWEEN.update();
 				//zoom
+				if(camera.position.y<40){
+					camera.position.y=50;
+				}
+				if(camera.position.x>controls.maxDistance){
+					camera.position.x=controls.maxDistance-100;
+				}
+				if(camera.position.z>controls.maxDistance){
+					camera.position.z=controls.maxDistance-100;
+				}
 				if(camera.position.y<500&&camera){
 				}
 				
@@ -1379,6 +1582,39 @@
 				map_center_lat = (y/(STATIC_MAP_HEIGHT / 2))*(NWLat - centerPoint.lat()) + centerPoint.lat();
 				map_center_lng = (x/(STATIC_MAP_HEIGHT / 2))*(centerPoint.lng() - NWLng) + centerPoint.lng();            
             }
+			
+			
+			
+			function randomSet(setLength) {				
+				//console.log(strColorsJSON);
+				var jsonObject = strColorsJSON;
+				var colorsSet = [];
+				for(var index=0;index<jsonObject.colors.length;index++){
+					colorsSet.push(jsonObject.colors[index]);
+				}	
+				var resultSet=[];				
+				//shuffle array 'colorsSet' then select the first 'setLength' items
+				ArrayShuffle(colorsSet);
+				//console.log("shuffle:"+colorsSet);
+				for(var index=0;index<setLength;index++){
+					resultSet.push(colorsSet[index]);
+				}
+				//console.log("resultSet:"+resultSet);
+				return resultSet;
+			};
+			function ArrayShuffle(a) {
+			  var d,
+			  c,
+			  b = a.length;
+			   while (b) {
+				c = Math.floor(Math.random() * b);
+				d = a[--b];
+				a[b] = a[c];
+				a[c] = d
+			   }
+			   return a;
+			}
+    
         </script>
 		<!--Shader-->
 		<script type="x-shader/x-vertex" id="vertexShader">
@@ -1413,6 +1649,9 @@
 			}
 
 		</script>
+		  <script type="text/javascript">
+	
+</script>
     </body>
 
 </html>
