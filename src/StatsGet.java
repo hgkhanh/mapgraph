@@ -265,7 +265,7 @@ public class StatsGet extends HttpServlet {
 		PreparedStatement countStreetStatement = null;
 		PreparedStatement countDatatypeStreetStatement = null;
 
-		String countStreetSQL = "SELECT street_id,district_id,formatted_address,"
+		String countStreetSQL = "SELECT street_id,district_id,formatted_address,street.name,"
 				+ "latitude,longitude,COUNT(street_id)  AS total_survey "
 				+ "FROM answer  JOIN street ON street.street_id=answer.street_living_id "
 				+ "WHERE latitude IS NOT NULL GROUP BY street_id ;";
@@ -291,7 +291,8 @@ public class StatsGet extends HttpServlet {
 						+ " ");
 				countResult.add(new StreetStatsItem(rs.getInt("street_id"), rs
 						.getInt("district_id"), rs
-						.getString("formatted_address"), rs
+						.getString("formatted_address"),rs
+						.getString("name"), rs
 						.getString("latitude"), rs.getString("longitude"), rs
 						.getInt("total_survey")));
 			}

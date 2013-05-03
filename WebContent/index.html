@@ -18,9 +18,11 @@
         <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwjSVZUk7D3LgeLPHMurDHm5Z-u39IeY0&sensor=false"></script>
        
         <link rel="stylesheet" type="text/css" href="css/modern.css">
+        <link rel="stylesheet" type="text/css" href="css/jquery-ui-1.10.2.custom.css">
         <link href="css/modern-responsive.css" rel="stylesheet">
         <script type='text/javascript' src='js/tween.min.js'></script>
         <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
+        <script type="text/javascript" src="js/jquery-ui-1.10.2.custom.js"></script>
 		<!-- modern ui lib -->
         <script type="text/javascript" src="js/metroui/accordion.js"></script>
         <script type="text/javascript" src="js/metroui/buttonset.js"></script>
@@ -37,10 +39,26 @@
 		<!--  css -->
         <!-- <link rel="stylesheet" type="text/css" href="css/modern-responsive.css"> -->
         <!-- <link rel="stylesheet" type="text/css" href="css/theme-dark.css"> -->
+		<style>
+		.ui - autocomplete {
+			max - height: 100px;
+			overflow - y: auto;
+			/* prevent horizontal scrollbar */
+			overflow - x: hidden;
+			/* add padding to account for vertical scrollbar */
+			padding - right: 20px;
+		}
+		/* IE 6 doesn't support max-height
+		 * we use height instead, but this forces the menu to always be this tall
+		 */ * html.ui - autocomplete {
+			height: 100px;
+		}
+		</style>
     </head>
     
     <body class="metrouicss" style="zoom: 1;">
-        <div id="container" style="width: 70%; margin: auto; float: left; z-index: -10; position: relative"></div>
+	
+        <div id="container" style="width: 70%; margin: auto; float: left; z-index: -10; position: relative;" ></div>
        
 		<div id="form" style="width: 30%; margin: auto; float: right;z-index: 200; position: relative;background-color: rgba(255,255,255,0.5);">
 			<div id="zoom_place_holder" style="position: relative;margin:10px;">
@@ -49,19 +67,29 @@
 			</div>
 			<ul class="accordion" data-role="accordion" style="position: relative;margin:10px">
 				
-				<li class="active"><a href="#"> Tuỳ Chọn</a>					
-					<div id="district" class="row">
-					
+				<li class="active"><a href="#"> Tuỳ Chọn</a>
+					<div id="street" class="row">		
+						<h3> Đường phố</h3>
+						<div id="streetFormContainer" >
+						<!--
+							<a class="button default" onClick="drawStreetGraph()">View</a>
+						-->
+							<div id="streetSearchBoxDiv" class="input-control text">
+								<input id="streetSearchBox"type="text"/>
+								<button class="btn-search" tabindex="-1" type="button" onClick="drawStreetGraph(1)"></button>					
+							</div>
+						</div>
+					</div>
 					<div id="dataFormContainer" style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">						
 						<form id="dataForm">
-							<div id="datatype_col">
-									<h3>Loại dữ liệu</h3>
-									<label class="input-control checkbox indeterminate">
-										<input type="checkbox" id="datatype_all" value="datatype_all">	<span class="helper"><b>Tổng hợp</b></span>
-									</label>
+							<div id="datatype_col">		
+								<h3>Loại dữ liệu</h3>
+								<label class="input-control checkbox indeterminate">
+									<input type="checkbox" id="datatype_all" value="datatype_all">	<span class="helper"><b>Tổng hợp</b></span>
+								</label>
 							</div>
 							<div id="time_col">
-									<h3>Thời gian</h3>
+								<h3>Thời gian</h3>
 							<label class="input-control checkbox indeterminate">
 								<input type="checkbox" id="time_all" name="time" value="time_all">	<span class="helper"><b>Chọn tất cả</b></span>
 
@@ -70,27 +98,16 @@
 						</form>	
 
 					</div>
+					<div id="district" class="row">					
 					<h3> Quận/Huyện</h3>
 						<label class="input-control checkbox indeterminate">
 							<input type="checkbox" id="dist_all" name="dist" value="dist_all">	<span class="helper"><b>Chọn tất cả</b></span>
-
 						</label>
 						<div id="districtFormContainer" style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">
 							<form id="distForm"></form>	<a class="button default" onClick="drawDistGraph()">View</a>
-
 						</div>
 					</div>
-
-						<div id="seteetFormContainer" style="-moz-column-count: 2; -webkit-column-count: 2; column-count: 2;">
-						<h3> Đường phố</h3>
-							<div class="input-control text">
-								<input type="text">
-								<button class="btn-clear" tabindex="-1" type="button"></button>
-							</div>	<a class="button default" onClick="drawStreetGraph()">View</a>
-	
-
-						</div>
-				
+					
 					</li>
 					
 					
@@ -99,6 +116,9 @@
         </div>
         <!-- form jquery -->
         <script type="text/javascript">
+			// street name list for search
+			var streetListSearch = [];
+			// colors for graph
 			var strColorsJSON ;
             // field showed var
             var images_group = [];
@@ -113,10 +133,9 @@
 			var SCREEN_WIDTH = window.innerWidth;
 			var SCREEN_HEIGHT = window.innerHeight;
             var ZOOM_MIN = 15;
-            var BAR_WIDTH = 30;
+            var BAR_WIDTH = 50;
             var BAR_HEIGHT_MULTIPLE = 10;
-            var BAR_WIDTH_DATATYPE = 25;
-            var BAR_HEIGHT_MULTIPLE_DATATYPE = 5;
+            var BAR_WIDTH_DATATYPE = BAR_WIDTH/2;
             var BAR_WIDTH_DATATYPE_SPACE = 1;
             var BAR_WIDTH_MULTIPLE = 1;
 			var DOME_RADIUS=6000;
@@ -149,8 +168,10 @@
                 x: 0,
                 y: 0
             }
+			
             var map_center_lat = 21.0357;
             var map_center_lng = 105.8261;
+
             var x_tile = 0;
             var y_tile = 0;
             var tile_center_lng = 0;
@@ -163,7 +184,9 @@
             latLngToCoord(map_center_lat, map_center_lng);
             console.log("cube pos :" + coord.x + ":" + coord.y);
              //Get fieldName
-            $(document).ready(function () {			
+            $(document).ready(function () {	
+				// focus textbox
+				$("#streetSearchBox").focus();
 				$.getJSON("colors.json", function(data) {
 					
 					strColorsJSON = data; 
@@ -201,8 +224,19 @@
                 }).success(function (data) {
                     <!-- Remove prgress cycle -->
                     $("#container").empty();
-                    console.log("done:\n" + data);
+                    console.log("done:\n" + data);					
                     jsonObj = eval("(" + data + ")");
+					// read street list into streetListSearch
+					for(var index = 0; index < jsonObj.streetStats.length;index++){
+						streetListSearch.push(jsonObj.streetStats[index].formatted_address);
+					}
+					console.log("streetListSearch"+streetListSearch);
+					$("#streetSearchBox").autocomplete({
+					  source: streetListSearch,
+					  appendTo: "#street",
+					  minLength: 5
+					});
+					// dynamically generate field and checkbox
                     for (var index = 0; index < jsonObj.fieldNames.length; index++) {
                         switch (jsonObj.fieldNames[index].type) {
                         case 1:
@@ -269,10 +303,10 @@
                             break;
                         }
                     }
+                    /*$("#datatype_col").append("<br/>");
                     $("#datatype_col").append("<br/>");
                     $("#datatype_col").append("<br/>");
-                    $("#datatype_col").append("<br/>");
-                    $("#datatype_col").append("<br/>");					
+                    $("#datatype_col").append("<br/>");	*/				
                     $("input[type='checkbox'][name='dist']").prop('checked', true);
                     $("input[type='checkbox'][name='time']").prop('checked', true);
                     $("input[type='checkbox'][name='datatype']").attr("disabled", true);
@@ -299,11 +333,11 @@
 							TILE_MULTIPLE = 9;
 							break;
 						case 14:
-							BAR_WIDTH_MULTIPLE = 0.8;
+							BAR_WIDTH_MULTIPLE = 0.9;
 							TILE_MULTIPLE = 11;
 							break;
 						case 15:case 16: case 17:
-							BAR_WIDTH_MULTIPLE = 0.6;	
+							BAR_WIDTH_MULTIPLE = 0.8;	
 							TILE_MULTIPLE = 11;
 							break;					
 						}
@@ -337,14 +371,34 @@
 					//datatype_all
 					$("#datatype_all").change(function () {
                             if ($("#datatype_all").is(":not(:checked)")) {
-                                console.log("enable datatypes cb");
-                                $("input[type='checkbox'][name='datatype']").attr("disabled", false);	
-								$("input[type='checkbox'][name='datatype']").prop('checked', true);	
+									console.log("enable datatypes cb");
+									$("input[type='checkbox'][name='time']").attr("disabled", false);
+									$("input[type='checkbox'][name='datatype']").attr("disabled", false);	
+									$("input[type='checkbox'][name='datatype']").prop('checked', true);
                             } else {
                                 console.log("disable datatypes cb");
+								$("input[type='checkbox'][name='time']").attr("disabled", true);
                                 $("input[type='checkbox'][name='datatype']").attr("disabled", true);
 								
                             }                        
+                        //draw mapgraph
+						if(graphtype_flag <= 2){
+							drawDistGraph();
+						}else{
+							drawStreetGraph();
+						}
+                    });
+					// datatype  cb
+					$("input[type='checkbox'][name='datatype']").change(function () {                       
+                        //draw mapgraph
+						if(graphtype_flag <= 2){
+							drawDistGraph();
+						}else{
+							drawStreetGraph();
+						}
+                    });
+					//time cb
+					$("input[type='checkbox'][name='time']").change(function () {                       
                         //draw mapgraph
 						if(graphtype_flag <= 2){
 							drawDistGraph();
@@ -406,11 +460,16 @@
 				camera.position.y = 1800;
                 camera.position.z = 1800;
 				camera.position.x = 0;
-				camera.lookAt(0,0,0);
+				camera.lookAt(0,0,0); 
+				if(graphtype_flag <= 2){
+					drawDistGraph();
+				}else{
+					drawStreetGraph();
+				}
 			}
 			function changeZoomLvl(level){
 				
-				if((level<=16)&&(level>=12)){
+				if((level<=17)&&(level>=12)){
 					if(zoom!=level){
 					//replace slider  with new one
 						$("#zoom_slider").data('slider').val((level-12)*20);
@@ -420,60 +479,69 @@
 						$("#zoom_slider_text").text(zoom);
 						switch (zoom) {
 						case 13: case 12:
-							BAR_WIDTH = 40;
-							BAR_WIDTH_MULTIPLE = 1;
+							//BAR_HEIGHT_MULTIPLE= 1;
 							TILE_MULTIPLE = 9;
 							break;
 						case 14:
-							BAR_WIDTH = 30;
-							BAR_WIDTH_MULTIPLE = 0.8;
+							//BAR_HEIGHT_MULTIPLE= 0.9;
 							TILE_MULTIPLE = 11;
 							break;
 						case 15:case 16: case 17:
-							BAR_WIDTH = 20;
-							BAR_WIDTH_MULTIPLE = 0.6;	
+							//BAR_HEIGHT_MULTIPLE= 0.8;	
 							TILE_MULTIPLE = 11;
-							break;
+							break;					
 						}
 					}
+				}else{
+					console.log("!12<=zoom:"+level+"<=17");
 				}
-				console.log("11<zoom<17");
 			}
             <!--  Three js Script -->
-			function drawStreetGraph(){
+			function drawStreetGraph(redraw){// redraw = re init tiles or not	
 				if ($("#datatype_all").is(":not(:checked)")) {
-					drawDatatypeStreetGraph();
+					drawDatatypeStreetGraph(redraw);
 				}else{
-					drawStreetAllGraph();
+					drawStreetAllGraph(redraw);
 				}
 			}
-			function drawStreetAllGraph() {
-				$("input[type='checkbox'][name='datatype']").prop('checked', false);	
-				$("#datatype_all").prop('checked', true);
+			function drawStreetAllGraph(redraw) {// redraw = re init tiles or not
+				console.log("function drawStreetAllGraph():"+$("#streetSearchBox").val());
+				// if street name in search box is not null
+				if($("#streetSearchBox").val()!=""){
+					console.log("$('#streetSearchBox').val()"+$("#streetSearchBox").val());
+					//search for that name
+					for(var index = 0; index < jsonObj.streetStats.length;index++){
+						if(jsonObj.streetStats[index].formatted_address==$("#streetSearchBox").val()){
+							map_center_lat = jsonObj.streetStats[index].lat;
+							map_center_lng = jsonObj.streetStats[index].lng;
+							console.log("map_center_lat:"+map_center_lat);
+							console.log("map_center_lng:"+map_center_lng);
+						}
+					}
+				}else{ // if not, show the default ( Ho Guom)
+					map_center_lat = 21.02811;
+					map_center_lng = 105.853186;
+				}
+				//$("input[type='checkbox'][name='datatype']").prop('checked', false);	
+				//$("#datatype_all").prop('checked', true);
 				switch (zoom) {
 				case 13: case 12:
-					BAR_WIDTH = 40;
-					BAR_WIDTH_MULTIPLE = 1;
+					//BAR_HEIGHT_MULTIPLE= 1;
 					TILE_MULTIPLE = 9;
 					break;
 				case 14:
-					BAR_WIDTH = 30;
-					BAR_WIDTH_MULTIPLE = 0.8;
+					//BAR_HEIGHT_MULTIPLE= 0.9;
 					TILE_MULTIPLE = 11;
 					break;
 				case 15:case 16: case 17:
-					BAR_WIDTH = 20;
-					BAR_WIDTH_MULTIPLE = 0.6;	
+					//BAR_HEIGHT_MULTIPLE= 0.8;	
 					TILE_MULTIPLE = 11;
-					break;
-				}
-                BAR_HEIGHT_MULTIPLE_DATATYPE = 20;
+					break;					
+				}			
+                changeZoomLvl(17);
 				console.log("value:"+$("#zoom_slider").attr("data-param-init-value"));
-                changeZoomLvl(16);
-				map_center_lat = 21.02811;
-				map_center_lng = 105.853186;
                 TILE_MULTIPLE = 11;
-                if (graphtype_flag <= 2) {
+                if ((graphtype_flag <= 2)||(redraw=1)) {
                     graphtype_flag = 4;
 					console.log("zoom:"+zoom);
                     init_tiles(zoom);
@@ -487,31 +555,43 @@
                 graph();
                 animate();
             }
-            function drawDatatypeStreetGraph() {
-				$("input[type='checkbox'][name='datatype']").prop('checked', true);	
-				$("#datatype_all").prop('checked', false);
+            function drawDatatypeStreetGraph(redraw) {// redraw = re init tiles or not
+				console.log("function drawStreetAllGraph():"+$("#streetSearchBox").val());
+				// if street name in search box is not null
+				if($("#streetSearchBox").val()!=""){
+					console.log("$('#streetSearchBox').val()"+$("#streetSearchBox").val());
+					//search for that name
+					for(var index = 0; index < jsonObj.streetStats.length;index++){
+						if(jsonObj.streetStats[index].formatted_address==$("#streetSearchBox").val()){
+							map_center_lat = jsonObj.streetStats[index].lat;
+							map_center_lng = jsonObj.streetStats[index].lng;
+							console.log("map_center_lat:"+map_center_lat);
+							console.log("map_center_lng:"+map_center_lng);
+						}
+					}
+				}else{ // if not, show the default ( Ho Guom)
+					map_center_lat = 21.02811;
+					map_center_lng = 105.853186;
+				}
+				//$("input[type='checkbox'][name='datatype']").prop('checked', true);	
+				//$("#datatype_all").prop('checked', false);
                 switch (zoom) {
 				case 13: case 12:
-					BAR_WIDTH = 40;
-					BAR_WIDTH_MULTIPLE = 1;
+					//BAR_HEIGHT_MULTIPLE= 1;
 					TILE_MULTIPLE = 9;
 					break;
 				case 14:
-					BAR_WIDTH = 30;
-					BAR_WIDTH_MULTIPLE = 0.8;
+					//BAR_HEIGHT_MULTIPLE= 0.9;
 					TILE_MULTIPLE = 11;
 					break;
 				case 15:case 16: case 17:
-					BAR_WIDTH = 20;
-					BAR_WIDTH_MULTIPLE = 0.6;	
+					//BAR_HEIGHT_MULTIPLE= 0.8;	
 					TILE_MULTIPLE = 11;
-					break;
-				}
+					break;					
+				}			
+                changeZoomLvl(17);
 				console.log("value:"+$("#zoom_slider").attr("data-param-init-value"));
-                changeZoomLvl(16);
-				map_center_lat = 21.02811;
-				map_center_lng = 105.853186;
-                if (graphtype_flag != 3) {
+                if ((graphtype_flag != 3)||(redraw=1)) {
                     graphtype_flag = 3;
 					console.log("zoom:"+zoom);
                     init_tiles(zoom);
@@ -533,26 +613,23 @@
 				}
 			}
             function drawDistAllGraph() {
-				$("input[type='checkbox'][name='datatype']").prop('checked', false);	
-				$("#datatype_all").prop('checked', true);
+				//$("input[type='checkbox'][name='datatype']").prop('checked', false);	
+				//$("#datatype_all").prop('checked', true);
 				map_center_lat = 21.0357;
 				map_center_lng = 105.8261;
 				switch (zoom) {
 				case 13: case 12:
-					BAR_WIDTH = 40;
-					BAR_WIDTH_MULTIPLE = 1;
+					//BAR_HEIGHT_MULTIPLE= 1;
 					TILE_MULTIPLE = 9;
 					break;
 				case 14:
-					BAR_WIDTH = 30;
-					BAR_WIDTH_MULTIPLE = 0.8;
+					//BAR_HEIGHT_MULTIPLE= 0.9;
 					TILE_MULTIPLE = 11;
 					break;
 				case 15:case 16: case 17:
-					BAR_WIDTH = 20;
-					BAR_WIDTH_MULTIPLE = 0.6;	
+					//BAR_HEIGHT_MULTIPLE= 0.8;	
 					TILE_MULTIPLE = 11;
-					break;
+					break;					
 				}
                 changeZoomLvl(13);
                 if (graphtype_flag >=3) {
@@ -569,26 +646,23 @@
             }
 
             function drawDistDatatypeGraph() {
-				$("input[type='checkbox'][name='datatype']").prop('checked', true);	
-				$("#datatype_all").prop('checked', false);
+				//$("input[type='checkbox'][name='datatype']").prop('checked', true);	
+				//$("#datatype_all").prop('checked', false);
 				map_center_lat = 21.0357;
 				map_center_lng = 105.8261;
 				switch (zoom) {
 				case 13: case 12:
-					BAR_WIDTH = 40;
-					BAR_WIDTH_MULTIPLE = 1;
+					//BAR_HEIGHT_MULTIPLE= 1;
 					TILE_MULTIPLE = 9;
 					break;
 				case 14:
-					BAR_WIDTH = 30;
-					BAR_WIDTH_MULTIPLE = 0.8;
+					//BAR_HEIGHT_MULTIPLE= 0.9;
 					TILE_MULTIPLE = 11;
 					break;
 				case 15:case 16: case 17:
-					BAR_WIDTH = 20;
-					BAR_WIDTH_MULTIPLE = 0.6;	
+					//BAR_HEIGHT_MULTIPLE= 0.8;	
 					TILE_MULTIPLE = 11;
-					break;
+					break;					
 				}
                 changeZoomLvl(13);
 				
@@ -611,10 +685,21 @@
                 console.log("init :" + graphtype_flag);
 				//CAMERA
 				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 15000);
-                camera.position.y = 1800;
-                camera.position.z = 1800;
-				camera.position.x = 0;
-				camera.lookAt(0,0,0); 
+				switch(graphtype_flag){
+                case 1:case 2:
+					camera.position.y = 1800;
+					camera.position.z = 1800;
+					camera.position.x = 0;
+					camera.lookAt(0,0,0);
+				break;				
+				case 3:case 4:
+					camera.position.y = 1800;
+					camera.position.z = 0;
+					camera.position.x = 0;
+					camera.lookAt(0,0,0); 
+				break;
+				
+				}
                 //camera.rotation.x = 45 * (Math.PI / 180);
                 // set some camera attributes
                 //var VIEW_ANGLE = 45,
@@ -704,7 +789,7 @@
                 //Axes
                 var axes = new THREE.AxisHelper();
                 axes.scale.set( 1000, 1000, 1000 );
-                scene.add( axes );
+                //scene.add( axes );
 				
 				// big/base  plane 
                 // material
@@ -736,6 +821,7 @@
             }
 
             function graph() {
+				console.log("BAR_WIDTH_MULTIPLE"+BAR_WIDTH_MULTIPLE);
                 // Cube				
                 for (var i = 0; i < group_cube.length; i++) {
                     scene.remove(group_cube[i]);
@@ -759,11 +845,14 @@
 						}
 					}
 					
-					BAR_HEIGHT_MULTIPLE = (DOME_RADIUS/7)/max_height;
+					BAR_HEIGHT_MULTIPLE = (DOME_RADIUS/8)/max_height;
 					console.log("max_height:"+max_height);
 					console.log("BAR_HEIGHT_MULTIPLE:"+BAR_HEIGHT_MULTIPLE);
+					console.log("BAR_WIDTH:"+BAR_WIDTH);
+					console.log("BAR_WIDTH_MULTIPLE:"+BAR_WIDTH_MULTIPLE);
 					//loop through Stats Item to draw
 					var randomColorSet=randomSet(jsonObj.districtStats.length);			
+					console.log("randomColorSet:"+randomColorSet);
                     for (var index = 0; index < jsonObj.districtStats.length; index++) {
 
                         //console.log("district_id:"+jsonObj.districtStats[index].district_id);
@@ -784,9 +873,9 @@
                                 vertexColors: THREE.FaceColors
                             });
                             var cube = new THREE.Mesh(geometry, material);
-                            cube.scale.x = BAR_WIDTH;
+                            cube.scale.x = BAR_WIDTH*BAR_WIDTH_MULTIPLE;
                             cube.scale.y = (jsonObj.districtStats[index].data + 0.1) * BAR_HEIGHT_MULTIPLE * startMultipler;
-                            cube.scale.z = BAR_WIDTH;
+                            cube.scale.z = BAR_WIDTH*BAR_WIDTH_MULTIPLE;
                             cube.position.z = -coord.y;
                             cube.position.x = coord.x;
                             cube.position.y = cube.scale.y / 2;
@@ -832,9 +921,10 @@
 							max_height=jsonObj.districtStats[index].data+0.1;
 						}
 					}
-					BAR_HEIGHT_MULTIPLE_DATATYPE = (DOME_RADIUS/7)/max_height;
+					BAR_HEIGHT_MULTIPLE = (DOME_RADIUS/8)/max_height;
                     //loop thourgh dataTypeStats Item
-					var randomColorSet=randomSet((jsonObj.dataTypeStats.length)/44);	
+					var randomColorSet=randomSet(18);	
+					console.log("randomColorSet:"+randomColorSet);
                     for (var index = 0; index < jsonObj.dataTypeStats.length; index++) {
                         countSurveyTXT = 0.1, countSurveyIMG = 0.1, countSurveyAUD = 0.1, countSurveyVID = 0.1, curDistrict = jsonObj.dataTypeStats[index].district_id;
 
@@ -874,7 +964,23 @@
                             index++;
                         }
 
-								
+						//draw base of graph
+						if (Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2&&Math.abs(coord.y)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2) {
+							plane = new THREE.Mesh(new THREE.CubeGeometry( BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE * 6,BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE * 6 , 1, 1), new THREE.MeshLambertMaterial({
+							map: THREE.ImageUtils.loadTexture('images/datatype_graph_base.jpg'),	
+								overdraw: true,
+								opacity: 0.8,
+								transparent: true
+							}));
+							plane.position.y = 5;
+							plane.position.x=coord.x;
+							plane.position.z=-coord.y;
+							plane.rotation.x = -Math.PI / 2;
+							plane.rotation.z = 0;
+							//plane.castShadow=true;
+							plane.receiveShadow=true;
+							scene.add(plane);
+						}
                         for (var datatype_index = 1; datatype_index <= 4; datatype_index++) {
                             // draw only checked_datatype and checked_district and inside map
                             if ($("input[type='checkbox'][value=" + datatype_index + "][name='datatype']").is(':checked') && $("input[type='checkbox'][value=" + jsonObj.dataTypeStats[index - 1].district_id + "][name='dist']").is(':checked')
@@ -886,24 +992,24 @@
                                 case 1:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(randomColorSet[jsonObj.dataTypeStats[index - 1].district_id-1]);
+                                        geometry.faces[i].color.setHex(0x850A0A);
                                     }
                                     var material = new THREE.MeshPhongMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
                                     cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
-                                    cube.scale.y = countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
+                                    cube.scale.y = countSurveyTXT * BAR_HEIGHT_MULTIPLE * startMultipler;
                                     cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
-                                    cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
 									//shadow
 									cube.castShadow=true;
 									cube.receiveShadow=true;
                                     // tween
                                     var cubeItem = {
-                                        y: countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
+                                        y: countSurveyTXT * BAR_HEIGHT_MULTIPLE * startMultipler,
                                         mesh: cube
                                     };
 
@@ -914,7 +1020,7 @@
                                     }
                                     var tween = new TWEEN.Tween(cubeItem)
                                         .to({
-                                        y: countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE
+                                        y: countSurveyTXT * BAR_HEIGHT_MULTIPLE
                                     }, 2000)
                                         .delay(0)
                                         .onUpdate(updateCallback)
@@ -926,24 +1032,25 @@
                                 case 2:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(randomColorSet[jsonObj.dataTypeStats[index - 1].district_id-1]);
+                                        geometry.faces[i].color.setHex(0xE79819);
                                     }
                                     var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
                                     cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
-                                    cube.scale.y = countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
+                                    cube.scale.y = countSurveyIMG * BAR_HEIGHT_MULTIPLE * startMultipler;
                                     cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
-                                    cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
-                                    cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    
+									cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
+                                    cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
 									//shadow
 									cube.castShadow=true;
 									cube.receiveShadow=true;
                                     // tween
                                     var cubeItem = {
-                                        y: countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
+                                        y: countSurveyIMG * BAR_HEIGHT_MULTIPLE * startMultipler,
                                         mesh: cube
                                     };
 
@@ -953,7 +1060,7 @@
                                     }
                                     var tween = new TWEEN.Tween(cubeItem)
                                         .to({
-                                        y: countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE
+                                        y: countSurveyIMG * BAR_HEIGHT_MULTIPLE
                                     }, 2000)
                                         .delay(0)
                                         .onUpdate(updateCallback)
@@ -965,25 +1072,24 @@
                                 case 3:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(randomColorSet[jsonObj.dataTypeStats[index - 1].district_id-1]);
+                                        geometry.faces[i].color.setHex(0x7C80F2);
                                     }
                                     var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
                                     cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
-                                    cube.scale.y = countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
+                                    cube.scale.y = countSurveyAUD * BAR_HEIGHT_MULTIPLE * startMultipler;
                                     cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.z = -(coord.y + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
-                                    cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
-
+                                    cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
 									//shadow
 									cube.castShadow=true;
 									cube.receiveShadow=true;
                                     // tween
                                     var cubeItem = {
-                                        y: countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
+                                        y: countSurveyAUD * BAR_HEIGHT_MULTIPLE * startMultipler,
                                         mesh: cube
                                     };
 
@@ -994,7 +1100,7 @@
                                     }
                                     var tween = new TWEEN.Tween(cubeItem)
                                         .to({
-                                        y: countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE
+                                        y: countSurveyAUD * BAR_HEIGHT_MULTIPLE
                                     }, 2000)
                                         .delay(0)
                                         .onUpdate(updateCallback)
@@ -1006,24 +1112,26 @@
                                 case 4:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(randomColorSet[jsonObj.dataTypeStats[index - 1].district_id-1]);
+                                        geometry.faces[i].color.setHex(0x00F0A8);
                                     }
                                     var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
                                     cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
-                                    cube.scale.y = countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
+                                    cube.scale.y = countSurveyVID * BAR_HEIGHT_MULTIPLE * startMultipler;
                                     cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
-                                    cube.position.z = -(coord.y + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
-                                    cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+									cube.position.z = -(coord.y + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
+                                    cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+
                                     cube.position.y = cube.scale.y / 2;
+                                    
                                     //shadow
 									cube.castShadow=true;
 									cube.receiveShadow=true;
 									// tween
                                     var cubeItem = {
-                                        y: countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
+                                        y: countSurveyVID * BAR_HEIGHT_MULTIPLE * startMultipler,
                                         mesh: cube
                                     };
 
@@ -1034,7 +1142,7 @@
                                     }
                                     var tween = new TWEEN.Tween(cubeItem)
                                         .to({
-                                        y: countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE
+                                        y: countSurveyVID * BAR_HEIGHT_MULTIPLE
                                     }, 2000)
                                         .delay(0)
                                         .onUpdate(updateCallback)
@@ -1106,38 +1214,60 @@
                             }
 
                         }
-						//var randomColorSet=randomSet(jsonObj.districtStats.length);			
+						
+						//console.log("countSurveyTXT"+countSurveyTXT);
+						//console.log("countSurveyIMG"+countSurveyIMG);
+						//console.log("countSurveyAUD"+countSurveyAUD);
+						//console.log("countSurveyVID"+countSurveyVID);
+						//var randomColorSet=randomSet(jsonObj.districtStats.length);	
+						//draw base of graph
+						if (Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2&&Math.abs(coord.y)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2) {
+							plane = new THREE.Mesh(new THREE.CubeGeometry( BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE * 6,BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE * 6 , 1, 1), new THREE.MeshLambertMaterial({
+							map: THREE.ImageUtils.loadTexture('images/datatype_graph_base.jpg'),	
+								overdraw: true,
+								opacity: 0.8,
+								transparent: true
+							}));
+							plane.position.y = 5;
+							plane.position.x=coord.x;
+							plane.position.z=-coord.y;
+							plane.rotation.x = -Math.PI / 2;
+							plane.rotation.z = 0;
+							//plane.castShadow=true;
+							plane.receiveShadow=true;
+							scene.add(plane);	
+						}						
                         for (var datatype_index = 1; datatype_index <= 4; datatype_index++) {
 							
                             // draw only checked_datatype & checked_district & inside map
                             if ($("input[type='checkbox'][value=" + datatype_index + "][name='datatype']").is(':checked') && $("input[type='checkbox'][value=" + jsonObj.streetStats[index].district_id + "][name='dist']").is(':checked')
 							&&Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2&&Math.abs(coord.y)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2) {
-                               
-                                //console.log("jsonObj.dataTypeStats[index-1].district_id :"+jsonObj.dataTypeStats[index-1].district_id );
+								
+                                //console.log("jsonObj.streetStats[index-1].district_id :"+jsonObj.streetStats[index].district_id );
                                 //bar position
 								
                                 switch (datatype_index) {
                                 case 1:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(Math.random()*0xffffff);
+                                        geometry.faces[i].color.setHex(0x850A0A);
                                     }
                                     var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
                                     cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
-                                    cube.scale.y = countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
+                                    cube.scale.y = countSurveyTXT * BAR_HEIGHT_MULTIPLE * startMultipler;
                                     cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
-                                    cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
 									//shadow
 									cube.castShadow=true;
 									//cube.receiveShadow=true;
                                     // tween
                                     var cubeItem = {
-                                        y: countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
+                                        y: countSurveyTXT * BAR_HEIGHT_MULTIPLE * startMultipler,
                                         mesh: cube
                                     };
 
@@ -1148,7 +1278,7 @@
                                     }
                                     var tween = new TWEEN.Tween(cubeItem)
                                         .to({
-                                        y: countSurveyTXT * BAR_HEIGHT_MULTIPLE_DATATYPE
+                                        y: countSurveyTXT * BAR_HEIGHT_MULTIPLE
                                     }, 2000)
                                         .delay(0)
                                         .onUpdate(updateCallback)
@@ -1160,24 +1290,25 @@
                                 case 2:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(Math.random()*0xffffff);
+                                        geometry.faces[i].color.setHex(0xE79819);
                                     }
                                     var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
                                     cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
-                                    cube.scale.y = countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
+                                    cube.scale.y = countSurveyIMG * BAR_HEIGHT_MULTIPLE * startMultipler;
                                     cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
-                                    cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
-                                    cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    
+									cube.position.z = -(coord.y - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
+                                    cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
 									//shadow
 									cube.castShadow=true;
 									//cube.receiveShadow=true;
                                     // tween
                                     var cubeItem = {
-                                        y: countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
+                                        y: countSurveyIMG * BAR_HEIGHT_MULTIPLE * startMultipler,
                                         mesh: cube
                                     };
 
@@ -1187,7 +1318,7 @@
                                     }
                                     var tween = new TWEEN.Tween(cubeItem)
                                         .to({
-                                        y: countSurveyIMG * BAR_HEIGHT_MULTIPLE_DATATYPE
+                                        y: countSurveyIMG * BAR_HEIGHT_MULTIPLE
                                     }, 2000)
                                         .delay(0)
                                         .onUpdate(updateCallback)
@@ -1199,24 +1330,24 @@
                                 case 3:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(Math.random()*0xffffff);
+                                        geometry.faces[i].color.setHex(0x7C80F2);
                                     }
                                     var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
                                     cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
-                                    cube.scale.y = countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
+                                    cube.scale.y = countSurveyAUD * BAR_HEIGHT_MULTIPLE * startMultipler;
                                     cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.z = -(coord.y + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
-                                    cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
 									//shadow
 									cube.castShadow=true;
 									//cube.receiveShadow=true;
                                     // tween
                                     var cubeItem = {
-                                        y: countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
+                                        y: countSurveyAUD * BAR_HEIGHT_MULTIPLE * startMultipler,
                                         mesh: cube
                                     };
 
@@ -1227,7 +1358,7 @@
                                     }
                                     var tween = new TWEEN.Tween(cubeItem)
                                         .to({
-                                        y: countSurveyAUD * BAR_HEIGHT_MULTIPLE_DATATYPE
+                                        y: countSurveyAUD * BAR_HEIGHT_MULTIPLE
                                     }, 2000)
                                         .delay(0)
                                         .onUpdate(updateCallback)
@@ -1239,24 +1370,25 @@
                                 case 4:
                                     var geometry = new THREE.CubeGeometry(1, 1, 1);
                                     for (var i = 0; i < geometry.faces.length; i++) {
-                                        geometry.faces[i].color.setHex(Math.random()*0xffffff);
+                                        geometry.faces[i].color.setHex(0x00F0A8);
                                     }
                                     var material = new THREE.MeshLambertMaterial({
                                         vertexColors: THREE.FaceColors
                                     });
                                     var cube = new THREE.Mesh(geometry, material);
                                     cube.scale.x = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
-                                    cube.scale.y = countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler;
+                                    cube.scale.y = countSurveyVID * BAR_HEIGHT_MULTIPLE * startMultipler;
                                     cube.scale.z = BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
-                                    cube.position.z = -(coord.y + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
-                                    cube.position.x = coord.x + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
+                                    
+									cube.position.z = -(coord.y + BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE);
+                                    cube.position.x = coord.x - BAR_WIDTH_DATATYPE_SPACE * BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE;
                                     cube.position.y = cube.scale.y / 2;
 									//shadow
 									cube.castShadow=true;
 									//cube.receiveShadow=true;
                                     // tween
                                     var cubeItem = {
-                                        y: countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE * startMultipler,
+                                        y: countSurveyVID * BAR_HEIGHT_MULTIPLE * startMultipler,
                                         mesh: cube
                                     };
 
@@ -1267,7 +1399,7 @@
                                     }
                                     var tween = new TWEEN.Tween(cubeItem)
                                         .to({
-                                        y: countSurveyVID * BAR_HEIGHT_MULTIPLE_DATATYPE
+                                        y: countSurveyVID * BAR_HEIGHT_MULTIPLE
                                     }, 2000)
                                         .delay(0)
                                         .onUpdate(updateCallback)
@@ -1287,6 +1419,7 @@
                     break;
                 case 4:
                     console.log("drawStreetAllGraph");
+					
                     //console.log(jsonObj.streetStats[jsonObj.streetStats.length-1].datatype_count[jsonObj.streetStats[jsonObj.streetStats.length-1].datatype_count.length-1]);
 
                     // DRAW district graph
@@ -1300,11 +1433,12 @@
 							max_height=jsonObj.streetStats[index].count+0.1;
 						}
 					}
-					BAR_HEIGHT_MULTIPLE = (DOME_RADIUS/7)/max_height;
+					BAR_HEIGHT_MULTIPLE = (DOME_RADIUS/8)/max_height;
 					console.log("max_height:"+max_height);
 					console.log("BAR_HEIGHT_MULTIPLE:"+BAR_HEIGHT_MULTIPLE);
 					//loop through Stats Item to draw
-					var randomColorSet=randomSet(jsonObj.streetStats.length);			
+					var randomColorSet=randomSet(jsonObj.streetStats.length);		
+					console.log("randomColorSet:"+randomColorSet);
                     for (var index = 0; index < jsonObj.streetStats.length; index++) {
 
                         //console.log("district_id:"+jsonObj.streetStats[index].district_id);
@@ -1318,7 +1452,7 @@
                             startMultipler = Math.random() * (max - min) + min;
                             var geometry = new THREE.CubeGeometry(1, 1, 1);			
 									
-							console.log("BAR_WIDTH"+BAR_WIDTH);
+							//console.log("BAR_WIDTH"+BAR_WIDTH);
                             for (var i = 0; i < geometry.faces.length; i++) {
                                 geometry.faces[i].color.setHex(Math.random()*0xffffff);
                             }
@@ -1457,9 +1591,13 @@
 
             function init_tiles(zoom) {
 				console.log("init_tile:"+zoom);
+				//console.log("map_center_lat:"+map_center_lat);
+				//console.log("map_center_lng:"+map_center_lng);
                 //proj = new MercatorProjection();
                 G = google.maps;
                 // get x y of the tile in selected lat-lng	
+				//console.log("long2tile("+map_center_lng+", "+zoom+"):" + long2tile(map_center_lng, zoom));
+                //console.log("lat2tile("+map_center_lat+", "+zoom+"):" + lat2tile(map_center_lat, zoom));
                 x_tile = long2tile(map_center_lng, zoom);
                 y_tile = lat2tile(map_center_lat, zoom);
                 //get lat - lng of the center of the tile image fetched
@@ -1470,13 +1608,12 @@
                 //SELat = tile2long(x_tile+1,zoom);
                 //SELng = tile2lat(x_tile+1,zoom);
                 //strDataURI = "http://b.tile.openstreetmap.org/"+zoom+"/"+x_tile+"/"+y_tile+".png";
-                console.log("zoom :" + zoom);
                 console.log("x_tile :" + long2tile(map_center_lng, zoom));
                 console.log("y_tile :" + lat2tile(map_center_lat, zoom));
                 console.log("tile center long:" + tile2long(x_tile + 0.5, zoom));
                 console.log("tile center lat :" + tile2lat(y_tile + 0.5, zoom));
-                console.log("tile NW long:" + tile2long(x_tile, zoom));
-                console.log("tile NW lat :" + tile2lat(y_tile, zoom));
+                //console.log("tile NW long:" + tile2long(x_tile, zoom));
+                //console.log("tile NW lat :" + tile2lat(y_tile, zoom));
                 centerPoint = new G.LatLng(tile_center_lat, tile_center_lng);
 				
 				
@@ -1544,10 +1681,12 @@
              // utils function
 
             function long2tile(lon, zoom) {
+				lon = parseFloat(lon);
                 return (Math.floor((lon + 180) / 360 * Math.pow(2, zoom)));
             }
 
             function lat2tile(lat, zoom) {
+				lat = parseFloat(lat);
                 return (Math.floor((1 - Math.log(Math.tan(lat * Math.PI / 180) + 1 / Math.cos(lat * Math.PI / 180)) / Math.PI) / 2 * Math.pow(2, zoom)));
             }
 

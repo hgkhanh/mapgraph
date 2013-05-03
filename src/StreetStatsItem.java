@@ -8,30 +8,33 @@ import org.json.simple.JSONObject;
 public class StreetStatsItem implements JSONAware {
 	private int street_id;
 	private int district_id;
-	private String fomatted_address;	
+	private String formatted_address;	
+	private String streetName;	
 	private String lat;
 	private String lng;	
 	private int count;
 	private int datatype_count [][];
 
-	public StreetStatsItem(int street_id, int district_id, String address,
+	public StreetStatsItem(int street_id, int district_id, String address,String streetName,
 			String lat, String lng, int count) {
 		super();
 		this.street_id = street_id;
 		this.district_id = district_id;
-		this.fomatted_address = address;
+		this.formatted_address = address;
+		this.streetName = streetName;
 		this.lat = lat;
 		this.lng = lng;
 		this.count = count;
 		this.datatype_count= new int[4][11];
 	}
 
-	public StreetStatsItem(int street_id, int district_id, String address,
+	public StreetStatsItem(int street_id, int district_id, String address,String streetName,
 			String lat, String lng, int count,int datatype_count[][]) {
 		super();
 		this.street_id = street_id;
 		this.district_id = district_id;
-		this.fomatted_address = address;
+		this.formatted_address = address;
+		this.streetName = streetName;
 		this.lat = lat;
 		this.lng = lng;
 		this.count = count;
@@ -60,12 +63,12 @@ public class StreetStatsItem implements JSONAware {
 
 
 	public String getAddress() {
-		return fomatted_address;
+		return formatted_address;
 	}
 
 
 	public void setAddress(String address) {
-		this.fomatted_address = address;
+		this.formatted_address = address;
 	}
 
 
@@ -100,12 +103,12 @@ public class StreetStatsItem implements JSONAware {
 
 
 	public String getFomatted_address() {
-		return fomatted_address;
+		return formatted_address;
 	}
 
 
 	public void setFomatted_address(String fomatted_address) {
-		this.fomatted_address = fomatted_address;
+		this.formatted_address = fomatted_address;
 	}
 
 
@@ -121,11 +124,21 @@ public class StreetStatsItem implements JSONAware {
 	public void insertDatatype_countAt(int datatype_id,int time_id,int count){
 		this.datatype_count[datatype_id-1][time_id-1]=count;
 	}
+	
+	public String getStreetName() {
+		return streetName;
+	}
+
+	public void setStreetName(String streetName) {
+		this.streetName = streetName;
+	}
+
 	public String toJSONString() {
 		JSONObject obj = new JSONObject();
 		obj.put("street_id", street_id);
 		obj.put("district_id", district_id);
-		obj.put("fomatted_address", fomatted_address);
+		obj.put("formatted_address", formatted_address);
+		obj.put("streetName", streetName);
 		obj.put("count", count);
 		obj.put("lat", lat);
 		obj.put("lng", lng);

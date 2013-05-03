@@ -10,6 +10,9 @@
 /*
  * Corrects block display not defined in IE6/7/8/9 & FF3
  */
+ span.ui-helper-hidden-accessible{
+ 	visibility:hidden;
+ }
 article,
 aside,
 details,
@@ -117,6 +120,10 @@ h2 {
 h3 {
   font-size: 1.17em;
   margin: 1em 0;
+  break-after: always;
+  -column-break-before: always;
+  -moz-column-break-before: always;
+  -webkit-column-break-before: always;
 }
 h4 {
   font-size: 1em;
