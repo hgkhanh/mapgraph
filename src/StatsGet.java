@@ -1,3 +1,5 @@
+import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.sql.Connection;
@@ -6,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Scanner;
 
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
@@ -26,9 +29,7 @@ public class StatsGet extends HttpServlet {
 	 * JDBC
 	 */
 	private static final String DB_DRIVER = "com.mysql.jdbc.Driver";
-	private static final String DB_CONNECTION = "jdbc:mysql://localhost:3306/mapgraph_gen";
-	private static final String DB_USER = "root";
-	private static final String DB_PASSWORD = "abc123";
+	private File file ;
 	// private static final String DB_CONNECTION =
 	// "jdbc:mysql://sql2.freesqldatabase.com:3306/sql24921";
 	// private static final String DB_USER = "sql24921";
@@ -49,7 +50,7 @@ public class StatsGet extends HttpServlet {
 	 */
 	public StatsGet() {
 		super();
-		// TODO Auto-generated constructor stub
+		
 	}
 
 	/**
@@ -58,6 +59,7 @@ public class StatsGet extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
+		this.file = new File(this.getServletContext().getRealPath("/")+File.separator+"db.conf");
 		// int num1=Integer.parseInt(request.getParameter("num1"));
 		// int num2=Integer.parseInt(request.getParameter("num2"));
 		// PrintWriter pwriter= new PrintWriter(response.getOutputStream());
@@ -76,7 +78,7 @@ public class StatsGet extends HttpServlet {
 
 		try {
 			System.out.println("StatsGet");
-			dbConnection = getDBConnection();
+			dbConnection = getDBConnection(file);
 			PrintWriter pwriter = new PrintWriter(response.getOutputStream());
 			JSONObject obj = new JSONObject();
 			JSONArray jsonArray = new JSONArray();
@@ -119,7 +121,7 @@ public class StatsGet extends HttpServlet {
 
 	}
 
-	private static ArrayList<DistrictStatsItem> queryDataTypeStats()
+	private  ArrayList<DistrictStatsItem> queryDataTypeStats()
 			throws SQLException {
 		ArrayList<DistrictStatsItem> results = new ArrayList<DistrictStatsItem>();
 		PreparedStatement preparedStatement = null;
@@ -133,7 +135,7 @@ public class StatsGet extends HttpServlet {
 				+ "GROUP BY answer.district_living_id,answer_datatype_time.datatype_id,"
 				+ "answer_datatype_time.time_id;";
 		try {
-			dbConnection = getDBConnection();
+			dbConnection = getDBConnection(this.file);
 			System.out.println("query datatype stats");
 			preparedStatement = dbConnection
 					.prepareStatement(selectDatatypeStats);
@@ -158,7 +160,7 @@ public class StatsGet extends HttpServlet {
 		return results;
 	}
 
-	private static ArrayList<FieldName> queryFieldName() throws SQLException {
+	private ArrayList<FieldName> queryFieldName() throws SQLException {
 		ArrayList<FieldName> results = new ArrayList<FieldName>();
 		PreparedStatement preparedStatement = null;
 		String selectDistrict = "SELECT * FROM district WHERE latitude IS NOT NULL";
@@ -166,7 +168,7 @@ public class StatsGet extends HttpServlet {
 		String selectDatatype = "SELECT * FROM datatype";
 		String selectTime = "SELECT * FROM time";
 		try {
-			dbConnection = getDBConnection();
+			dbConnection = getDBConnection(this.file);
 			System.out.println("query District Name");
 			// selectDistrict SQL stetement
 			preparedStatement = dbConnection.prepareStatement(selectDistrict);
@@ -371,15 +373,18 @@ public class StatsGet extends HttpServlet {
 	// return result;
 	// }
 
-	private static Connection getDBConnection() {
+	private static Connection getDBConnection(File file) {
 		System.out.println("DB connecting...");
 		Connection dbConnection = null;
 
 		try {
 
 			Class.forName(DB_DRIVER);
-			dbConnection = DriverManager.getConnection(DB_CONNECTION, DB_USER,
-					DB_PASSWORD);
+			Scanner scanner=new Scanner(file);
+			
+			dbConnection = DriverManager.getConnection(scanner.nextLine(), scanner.nextLine(),
+					scanner.nextLine());
+			scanner.close();
 			System.out.println("DB connected!");
 			return dbConnection;
 
@@ -390,6 +395,9 @@ public class StatsGet extends HttpServlet {
 
 			System.out.println(e.getMessage());
 
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 		System.out.println("DB connected!");
 		return dbConnection;
