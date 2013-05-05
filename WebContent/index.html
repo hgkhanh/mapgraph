@@ -15,7 +15,10 @@
         <script type="text/javascript" src="js/threejs/TrackballControls.js"></script>
         <script type="text/javascript" src="js/threejs/OrbitControls.js"></script>
         <script type="text/javascript" src="js/threejs/stats.min.js"></script>
-        <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwjSVZUk7D3LgeLPHMurDHm5Z-u39IeY0&sensor=false"></script>
+        <script type="text/javascript" src="js/ggapi.js"></script>
+        <!--
+		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwjSVZUk7D3LgeLPHMurDHm5Z-u39IeY0&sensor=false"></script>
+		 -->
        
         <link rel="stylesheet" type="text/css" href="css/modern.css">
         <link rel="stylesheet" type="text/css" href="css/jquery-ui-1.10.2.custom.css">
@@ -39,6 +42,9 @@
 		<!--  css -->
         <!-- <link rel="stylesheet" type="text/css" href="css/modern-responsive.css"> -->
         <!-- <link rel="stylesheet" type="text/css" href="css/theme-dark.css"> -->
+        <!-- typehead (search street)-->
+        <link href="css/typeahead.css" rel="stylesheet">
+        <script type="text/javascript" src="js/typeahead.js"></script>     
 		<style>
 		.ui - autocomplete {
 			max - height: 100px;
@@ -60,7 +66,7 @@
 	
         <div id="container" style="width: 70%; margin: auto; float: left; z-index: -10; position: relative;" ></div>
        
-		<div id="form" style="width: 30%; margin: auto; float: right;z-index: 200; position: relative;background-color: rgba(255,255,255,0.5);">
+		<div id="ControlPanel" style="width: 30%; z-index: 200;position: absolute;background-color: rgba(255,255,255,0.5);right: 0;top: 0;">
 			<div id="zoom_place_holder" style="position: relative;margin:10px;">
 					<a href="#" onClick="centerCamera()"> Zoom : </a><a href="#" id="zoom_slider_text">13</a>
 					<div id='zoom_slider' class='slider' data-role='slider' data-param-init-value='20'data-param-accuracy='20'></div>
@@ -73,11 +79,12 @@
 						<div id="streetFormContainer" >
 						<!--
 							<a class="button default" onClick="drawStreetGraph()">View</a>
-						-->
+							-->
 							<div id="streetSearchBoxDiv" class="input-control text">
 								<input id="streetSearchBox"type="text"/>
 								<button class="btn-search" tabindex="-1" type="button" onClick="drawStreetGraph(1)"></button>					
 							</div>
+						
 						</div>
 					</div>
 					<div id="dataFormContainer" style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">						
@@ -144,8 +151,9 @@
             if (!Detector.webgl) Detector.addGetWebGLMessage();
 
             var container, stats;
-            var camera, controls, scene, renderer;
-            var group_plane, plane;
+            var camera, projector,controls, scene, renderer;
+            var plane,big_plane,skyDome;
+			var group_plane = [];
             var group_cube = [];
             var group_datatype_base = []; 
              //flag : which graph is showing
@@ -186,8 +194,6 @@
             console.log("cube pos :" + coord.x + ":" + coord.y);
              //Get fieldName
             $(document).ready(function () {	
-				// focus textbox
-				$("#streetSearchBox").focus();
 				$.getJSON("colors.json", function(data) {
 					
 					strColorsJSON = data; 
@@ -195,7 +201,7 @@
 				// handle responsive layout when resize window
 				responsive();
 				 <!-- Show prgress cycle -->
-                $("#container").append("<img  src='./images/preloader-w8-line-black.gif'>");
+                $("#container").append("<img  src='./images/preloader-w8-cycle-black.gif' style='margin-top: 20%;margin-left:50%'>");
                 <!-- SERVLET CALL -->				
                 //Check All checkbox
                 $("#dist_all").change(function () {
@@ -232,11 +238,11 @@
 						streetListSearch.push(jsonObj.streetStats[index].formatted_address);
 					}
 					console.log("streetListSearch"+streetListSearch);
-					$("#streetSearchBox").autocomplete({
-					  source: streetListSearch,
-					  appendTo: "#street",
-					  minLength: 5
+					$("#streetSearchBox").typeahead({
+					  limit: 10   ,
+					  local: streetListSearch
 					});
+					$("#streetSearchBox").focus();
 					// dynamically generate field and checkbox
                     for (var index = 0; index < jsonObj.fieldNames.length; index++) {
                         switch (jsonObj.fieldNames[index].type) {
@@ -303,11 +309,7 @@
                         default:
                             break;
                         }
-                    }
-                    /*$("#datatype_col").append("<br/>");
-                    $("#datatype_col").append("<br/>");
-                    $("#datatype_col").append("<br/>");
-                    $("#datatype_col").append("<br/>");	*/				
+                    }		
                     $("input[type='checkbox'][name='dist']").prop('checked', true);
                     $("input[type='checkbox'][name='time']").prop('checked', true);
                     $("input[type='checkbox'][name='datatype']").attr("disabled", true);
@@ -318,14 +320,41 @@
 					draw_tiles();
 					graph();
                     animate();
-					
+					// zoom slider
 					$("#zoom_slider").on("change", function(e, val){
 						console.log("x"+camera.position.x);
 						console.log("z"+camera.position.z);
-						if((camera.position.x<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2)||(camera.position.z<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2)){
-							// if camera inside  map
-							CoordtoLatLng(camera.position.x,-camera.position.z);
-						}
+						// which point to zoom 
+						
+							var vector = new THREE.Vector3( 0, 0, -1 );
+							vector.applyEuler( camera.rotation, camera.eulerOrder );
+							projector.unprojectVector( vector, camera );
+							var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+
+							var intersects = raycaster.intersectObjects( group_plane );
+							var particleMaterial = new THREE.ParticleCanvasMaterial( {
+
+								color: 0x000000,
+								program: function ( context ) {
+
+									context.beginPath();
+									context.arc( 0, 0, 1, 0, PI2, true );
+									context.closePath();
+									context.fill();
+
+								}
+
+							} );
+							if ( intersects.length > 0 ) {
+
+								intersects[ 0 ].object.material.color.setHex( Math.random() * 0xffffff );
+
+								scene.remove( intersects[ 0 ].object );
+								console.log("Camera Looking at"+intersects[ 0 ].object.position.x+":"+intersects[ 0 ].object.position.z);
+								console.log("Zoom to it");
+								CoordtoLatLng(intersects[ 0 ].object.position.x,-intersects[ 0 ].object.position.z);
+
+							}
 						console.log(map_center_lat+":"+map_center_lng);
 						console.log("zoom_slider changed:"+val);
 						
@@ -345,8 +374,13 @@
 							TILE_MULTIPLE = 11;
 							break;					
 						}
+						// xoay xoay on
+						//;
+						$("#container").empty();
+						$("#container").html("<img  src='./images/preloader-w8-cycle-black.gif' style='margin-top: 20%;margin-left:50%'>");
+						// xoay xoay off
 						init_tiles(zoom); 
-						init();	
+						createScene();	
 						draw_tiles();
 						graph();
 						animate();
@@ -414,6 +448,22 @@
                         //console.log("body width:" + $('body').innerWidth());
                         responsive();
                     });
+					// street search enter
+					$("#streetSearchBox").keypress(function(event){
+						var keycode = (event.keyCode ? event.keyCode : event.which);
+						if(keycode == '13'){
+							console.log('You pressed a "enter" key in textbox');	
+							drawStreetGraph(1);	
+						}
+ 
+					});
+					$(document).keypress(function(event){
+						var keycode = (event.keyCode ? event.keyCode : event.which);
+						if(keycode == '13'){
+							console.log('You pressed a "enter" key in somewhere');	
+							drawStreetGraph(1);	
+						}
+					});
                 });
             });
 			
@@ -547,9 +597,12 @@
                 TILE_MULTIPLE = 11;
                 if ((graphtype_flag <= 2)||(redraw=1)) {
                     graphtype_flag = 4;
-					console.log("zoom:"+zoom);
-                    init_tiles(zoom);
-					init();
+					console.log("redraw:"+zoom);
+					//;
+					$("#container").empty();
+					$("#container").html("<img  src='./images/preloader-w8-cycle-black.gif' style='margin-top: 20%;margin-left:50%'>");
+					init_tiles(zoom);
+					createScene();
 					draw_tiles();
 					
                 }
@@ -597,9 +650,12 @@
 				console.log("value:"+$("#zoom_slider").attr("data-param-init-value"));
                 if ((graphtype_flag != 3)||(redraw=1)) {
                     graphtype_flag = 3;
-					console.log("zoom:"+zoom);
-                    init_tiles(zoom);
-					init();
+					console.log("redraw:"+zoom);
+                    //;
+					$("#container").empty();
+					$("#container").html("<img  src='./images/preloader-w8-cycle-black.gif' style='margin-top: 20%;margin-left:50%'>");
+					init_tiles(zoom);
+					createScene();
 					draw_tiles();
 					
                 }
@@ -623,24 +679,41 @@
 				map_center_lng = 105.8261;
 				switch (zoom) {
 				case 13: case 12:
+					BAR_WIDTH_MULTIPLE = 1;
 					//BAR_HEIGHT_MULTIPLE= 1;
 					TILE_MULTIPLE = 9;
 					break;
 				case 14:
+					BAR_WIDTH_MULTIPLE = 1.3;
 					//BAR_HEIGHT_MULTIPLE= 0.9;
 					TILE_MULTIPLE = 11;
 					break;
-				case 15:case 16: case 17:
+				case 15: 
+					BAR_WIDTH_MULTIPLE = 1.6;
+					//BAR_HEIGHT_MULTIPLE= 0.8;	
+					TILE_MULTIPLE = 11;
+					break;
+				case 16: 
+					BAR_WIDTH_MULTIPLE = 1.8;
+					//BAR_HEIGHT_MULTIPLE= 0.8;	
+					TILE_MULTIPLE = 11;
+					break;
+				case 17: 
+					BAR_WIDTH_MULTIPLE = 2;
 					//BAR_HEIGHT_MULTIPLE= 0.8;	
 					TILE_MULTIPLE = 11;
 					break;					
 				}
                 changeZoomLvl(13);
                 if (graphtype_flag >=3) {
+					console.log("redraw:"+zoom);
                     graphtype_flag = 1;
 					console.log("init_tiles");
-                    init_tiles(zoom);
-					init();		
+                    //;
+					$("#container").empty();
+					$("#container").html("<img  src='./images/preloader-w8-cycle-black.gif' style='margin-top: 20%;margin-left:50%'>");
+					init_tiles(zoom);
+					createScene();		
 					draw_tiles();
 					
                 }						
@@ -672,20 +745,39 @@
 				
                 
                 if (graphtype_flag >=3) {
+					console.log("redraw:"+zoom);
 					console.log("init_tiles");
                     graphtype_flag = 2;
-                    init_tiles(zoom);
-					init();	
+                    //;
+					$("#container").empty();
+					$("#container").html("<img  src='./images/preloader-w8-cycle-black.gif' style='margin-top: 20%;margin-left:50%'>");
+					init_tiles(zoom);
+					createScene();	
 					draw_tiles();
 						
                 }
                 graphtype_flag = 2;
-               		
+               	createScene();	
+					draw_tiles();
                 graph();
                 animate();
             }
 			
             function init() {
+				// clear scene if redraw
+				if(scene){					
+					console.log("scene.children.length:"+scene.children.length);
+					console.log("scene.clear();");
+					scene.clear();
+					console.log("scene.children.length:"+scene.children.length);
+					console.log("scene.clear() manual;");
+					scene.remove(stats);
+					scene.remove(ambientLight);
+					scene.remove(directionalLight);
+					scene.remove(skyDome);
+					scene.remove(big_plane);
+					console.log("scene.children.length:"+scene.children.length);
+				}
                 console.log("init :" + graphtype_flag);
 				//CAMERA
 				camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 15000);
@@ -710,6 +802,8 @@
                 //    ASPECT = window.innerWidth / window.innerHeight,
                 //    NEAR = 1,
                 //    FAR = 110000;
+				// PROJECTOR
+				projector = new THREE.Projector();
 
                 // RENDERER
                 renderer = new THREE.WebGLRenderer({
@@ -724,7 +818,7 @@
 				renderer.physicallyBasedShading = true;  
 				renderer.shadowMapType=THREE.PCFSoftShadowMap;				
 				
-                var maxAnisotropy = renderer.getMaxAnisotropy();
+                //var maxAnisotropy = renderer.getMaxAnisotropy();
                
 				//SCENE
                 scene = new THREE.Scene();
@@ -760,32 +854,33 @@
 				directionalLight.shadowMapHeight=Math.pow(2,12);
 				directionalLight.shadowBias=-0.0008;
                 scene.add(directionalLight);				
-				
+				/*
 				//hemiLight
 				hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.05 );
 				hemiLight.color.setHSL( 0.6, 1, 0.75 );
 				hemiLight.groundColor.setHSL( 0.1, 0.8, 0.7 );
 				hemiLight.position.y = 500;
 				//scene.add( hemiLight );
+*/
 
-
-                container = document.getElementById('container');
-                while (container.firstChild) {
-                    container.removeChild(container.firstChild);
-                }
-                container.appendChild(renderer.domElement);
+                
 
                 stats = new Stats();
                 stats.domElement.style.position = 'absolute';
                 stats.domElement.style.top = '0px';
                 stats.domElement.style.zIndex = 100;
-                container.appendChild(stats.domElement);
+                
 
                 //
 				
 
                 window.addEventListener('resize', onWindowResize, false);
-				var skyDome = new THREE.Mesh(new THREE.SphereGeometry( DOME_RADIUS *120/100, 32, 15,0,Math.PI*2 ),new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture('images/sky_lightblue_1000.jpg'), side: THREE.BackSide }))
+				createScene();
+            }
+
+			function createScene(){
+				console.log("createScene()");
+				skyDome = new THREE.Mesh(new THREE.SphereGeometry( DOME_RADIUS *120/100, 32, 15,0,Math.PI*2 ),new THREE.MeshLambertMaterial({ map: THREE.ImageUtils.loadTexture('images/sky_lightblue_1000.jpg'), side: THREE.BackSide }))
 				skyDome.rotation.y = Math.PI;
 				scene.add(skyDome);
 				
@@ -797,20 +892,23 @@
 				
 				// big/base  plane 
                 // material
-                plane = new THREE.Mesh(new THREE.CircleGeometry( DOME_RADIUS, 20, 0, Math.PI * 2 ), new THREE.MeshLambertMaterial({
+                big_plane = new THREE.Mesh(new THREE.CircleGeometry( DOME_RADIUS, 20, 0, Math.PI * 2 ), new THREE.MeshLambertMaterial({
                     map: THREE.ImageUtils.loadTexture('images/land.jpg'),	
 					overdraw: true
                 }));
-                plane.position.y = -10;
-                plane.rotation.x = -Math.PI / 2;
-                plane.rotation.z = Math.PI / 4 + Math.PI / 24;
+                big_plane.position.y = -10;
+                big_plane.rotation.x = -Math.PI / 2;
+                big_plane.rotation.z = Math.PI / 4 + Math.PI / 24;
 				//plane.castShadow=true;
 				//plane.receiveShadow=true;
-                scene.add(plane);
-				
-            }
-
-
+                scene.add(big_plane);
+				container = document.getElementById('container');
+                while (container.firstChild) {
+                    container.removeChild(container.firstChild);
+                }
+                container.appendChild(renderer.domElement);
+				container.appendChild(stats.domElement);
+			}
             function onWindowResize() {
 
                 camera.aspect = window.innerWidth / window.innerHeight;
@@ -825,15 +923,21 @@
             }
 
             function graph() {
-				console.log("BAR_WIDTH_MULTIPLE"+BAR_WIDTH_MULTIPLE);
-                // Cube				
-                for (var i = 0; i < group_cube.length; i++) {
-                    scene.remove(group_cube[i]);
+				console.log("graph()");
+				console.log("scene.children.length:"+scene.children.length);
+				// Cube				
+				console.log("group_cube.length:"+group_cube.length);
+                for (var i = 0; i < group_cube.length; i++) {					
+                    scene.remove(group_cube[i]);					
                 }
+				console.log("scene.children.length:"+scene.children.length);
                 group_cube = [];
-				for (var i = 0; i < group_datatype_base.length; i++) {
-                    scene.remove(group_datatype_base[i]);
+				// base of datatype graph
+				console.log("group_datatype_base.length:"+group_datatype_base.length);
+				for (var i = 0; i < group_datatype_base.length; i++) {					
+                    scene.remove(group_datatype_base[i]);					
                 }
+				console.log("scene.children.length:"+scene.children.length);
 				group_datatype_base = [];
                 // generate a random multipler for startValue of a cube height when starting tweening
                 var min = 0.4;
@@ -1244,6 +1348,7 @@
 							plane.rotation.z = 0;
 							//plane.castShadow=true;
 							plane.receiveShadow=true;
+							group_datatype_base.push(plane);
 							scene.add(plane);	
 						}						
                         for (var datatype_index = 1; datatype_index <= 4; datatype_index++) {
@@ -1627,9 +1732,12 @@
 				
 				
             }
-			function draw_tiles() {
-			//group
-                group_plane = new THREE.Object3D();
+			function draw_tiles() {			
+				// plane	
+                for (var i = 0; i < group_plane.length; i++) {
+                    scene.remove(group_plane[i]);
+                }
+                group_plane = []
 				//group_plane.castShadow=true;
 				//group_plane.receiveShadow=true;
                 
@@ -1667,10 +1775,11 @@
                         plane.material.side = THREE.DoubleSide;
 						//plane.castShadow=true;
 						plane.receiveShadow=true;
-                        group_plane.add(plane);
+                        group_plane.push(plane);
+						scene.add(plane);
                     }
                 }
-                scene.add(group_plane);
+                
 			}
              // GET URL OF TILE
 
@@ -1762,6 +1871,14 @@
 			   }
 			   return a;
 			}
+			THREE.Object3D.prototype.clear = function(){
+				var children = this.children;
+				for(var i = children.length-1;i>=0;i--){
+					var child = children[i];
+					child.clear();
+					this.remove(child);
+				};
+			};
     
         </script>
 		<!--Shader-->
