@@ -1,4 +1,4 @@
-import java.io.File;
+﻿import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -7,6 +7,8 @@ import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.text.Normalizer;
+import java.text.Normalizer.Form;
 import java.util.ArrayList;
 import java.util.Scanner;
 
@@ -25,11 +27,12 @@ import org.json.simple.JSONObject;
 @WebServlet("/StatsGet")
 public class StatsGet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
+	private static final boolean accents_flag = true;
 	/*
 	 * JDBC
 	 */
 	private static final String DB_DRIVER = "com.mysql.jdbc.Driver";
-	private File file ;
+	private File file;
 	// private static final String DB_CONNECTION =
 	// "jdbc:mysql://sql2.freesqldatabase.com:3306/sql24921";
 	// private static final String DB_USER = "sql24921";
@@ -50,7 +53,7 @@ public class StatsGet extends HttpServlet {
 	 */
 	public StatsGet() {
 		super();
-		
+		// TODO Auto-generated constructor stub
 	}
 
 	/**
@@ -59,7 +62,8 @@ public class StatsGet extends HttpServlet {
 	 */
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
-		this.file = new File(this.getServletContext().getRealPath("/")+File.separator+"db.conf");
+		this.file = new File(this.getServletContext().getRealPath("/")
+				+ File.separator + "db.conf");
 		// int num1=Integer.parseInt(request.getParameter("num1"));
 		// int num2=Integer.parseInt(request.getParameter("num2"));
 		// PrintWriter pwriter= new PrintWriter(response.getOutputStream());
@@ -79,7 +83,10 @@ public class StatsGet extends HttpServlet {
 		try {
 			System.out.println("StatsGet");
 			dbConnection = getDBConnection(file);
+			response.setContentType("text/html; charset=UTF-8");
+			response.setCharacterEncoding("UTF-8");
 			PrintWriter pwriter = new PrintWriter(response.getOutputStream());
+
 			JSONObject obj = new JSONObject();
 			JSONArray jsonArray = new JSONArray();
 			// query field name
@@ -111,9 +118,12 @@ public class StatsGet extends HttpServlet {
 				jsonArray.add(resultDataTypeStats.get(i));
 			}
 			obj.put("dataTypeStats", jsonArray);
-			pwriter.println(obj);
+			String jsonArrayResponse = new String(
+					obj.toJSONString().getBytes(), "UTF-8");
+			pwriter.println(jsonArrayResponse);
 			pwriter.flush();
 			dbConnection.close();
+			System.out.println(jsonArrayResponse);
 			System.out.println("dbConnection close");
 		} catch (SQLException e) {
 			System.out.println(e.getMessage());
@@ -121,7 +131,7 @@ public class StatsGet extends HttpServlet {
 
 	}
 
-	private  ArrayList<DistrictStatsItem> queryDataTypeStats()
+	private ArrayList<DistrictStatsItem> queryDataTypeStats()
 			throws SQLException {
 		ArrayList<DistrictStatsItem> results = new ArrayList<DistrictStatsItem>();
 		PreparedStatement preparedStatement = null;
@@ -135,7 +145,7 @@ public class StatsGet extends HttpServlet {
 				+ "GROUP BY answer.district_living_id,answer_datatype_time.datatype_id,"
 				+ "answer_datatype_time.time_id;";
 		try {
-			dbConnection = getDBConnection(this.file);
+			dbConnection = getDBConnection(file);
 			System.out.println("query datatype stats");
 			preparedStatement = dbConnection
 					.prepareStatement(selectDatatypeStats);
@@ -168,14 +178,20 @@ public class StatsGet extends HttpServlet {
 		String selectDatatype = "SELECT * FROM datatype";
 		String selectTime = "SELECT * FROM time";
 		try {
-			dbConnection = getDBConnection(this.file);
+			dbConnection = getDBConnection(file);
 			System.out.println("query District Name");
 			// selectDistrict SQL stetement
 			preparedStatement = dbConnection.prepareStatement(selectDistrict);
 			ResultSet rs = preparedStatement.executeQuery();
 			while (rs.next()) {
-				FieldName mFieldName = new FieldName(FieldName.DISTRICT_TYPE,
-						rs.getString("district_id"), rs.getString("name"));
+				FieldName mFieldName = null;
+				if (accents_flag) {
+					mFieldName = new FieldName(FieldName.DISTRICT_TYPE,
+							rs.getString("district_id"), removeAccents(rs.getString("name")));
+				} else {
+					mFieldName = new FieldName(FieldName.DISTRICT_TYPE,
+							rs.getString("district_id"), rs.getString("name"));
+				}
 				results.add(mFieldName);
 			}
 			System.out.println("query Category Name");
@@ -192,8 +208,15 @@ public class StatsGet extends HttpServlet {
 			preparedStatement = dbConnection.prepareStatement(selectDatatype);
 			rs = preparedStatement.executeQuery();
 			while (rs.next()) {
-				FieldName mFieldName = new FieldName(FieldName.DATA_TYPE,
-						rs.getString("datatype_id"), rs.getString("name"));
+				FieldName mFieldName = null;
+				if (accents_flag) {
+					mFieldName = new FieldName(FieldName.DATA_TYPE,
+							rs.getString("datatype_id"),
+							removeAccents(rs.getString("name")));
+				} else {
+					mFieldName = new FieldName(FieldName.DATA_TYPE,
+							rs.getString("datatype_id"), rs.getString("name"));
+				}
 				results.add(mFieldName);
 			}
 			// selectTime SQL statement
@@ -272,12 +295,12 @@ public class StatsGet extends HttpServlet {
 				+ "FROM answer  JOIN street ON street.street_id=answer.street_living_id "
 				+ "WHERE latitude IS NOT NULL GROUP BY street_id ;";
 
-		String countDatatypeStreetSQL = "SELECT street_living_id,age_id,gender," +
-				"district_living_id,job_id,datatype_id,time_id,COUNT(*) AS count " +
-				"FROM answer JOIN answer_datatype_time ON " +
-				"answer.answer_id=answer_datatype_time.answer_id " +
-				"WHERE answer.street_living_id IS NOT NULL " +
-				"GROUP BY street_living_id,datatype_id,time_id;";
+		String countDatatypeStreetSQL = "SELECT street_living_id,age_id,gender,"
+				+ "district_living_id,job_id,datatype_id,time_id,COUNT(*) AS count "
+				+ "FROM answer JOIN answer_datatype_time ON "
+				+ "answer.answer_id=answer_datatype_time.answer_id "
+				+ "WHERE answer.street_living_id IS NOT NULL "
+				+ "GROUP BY street_living_id,datatype_id,time_id;";
 
 		try {
 			System.out.println("queryStreet querying...");
@@ -291,26 +314,40 @@ public class StatsGet extends HttpServlet {
 				System.out.print("\nstreet_id" + ":" + rs.getInt("street_id")
 						+ " total_survey" + ":" + rs.getInt("total_survey")
 						+ " ");
-				countResult.add(new StreetStatsItem(rs.getInt("street_id"), rs
-						.getInt("district_id"), rs
-						.getString("formatted_address"),rs
-						.getString("name"), rs
-						.getString("latitude"), rs.getString("longitude"), rs
-						.getInt("total_survey")));
+
+				if (accents_flag) {
+					countResult.add(new StreetStatsItem(rs.getInt("street_id"),
+							rs.getInt("district_id"), removeAccents(rs
+									.getString("formatted_address")),
+							removeAccents(rs.getString("name")), rs
+									.getString("latitude"), rs
+									.getString("longitude"), rs
+									.getInt("total_survey")));
+				} else {
+					countResult.add(new StreetStatsItem(rs.getInt("street_id"),
+							rs.getInt("district_id"), rs
+									.getString("formatted_address"), rs
+									.getString("name"), rs
+									.getString("latitude"), rs
+									.getString("longitude"), rs
+									.getInt("total_survey")));
+				}
 			}
 
 			// read datatype_time
 			rs = countDatatypeStreetStatement.executeQuery();
 			while (rs.next()) {
-				System.out.print("\nstreet_id" + ":" + rs.getInt("street_living_id")
-						+ " datatype_id" + ":" + rs.getInt("datatype_id")
-						+ " time_id" + ":" + rs.getInt("time_id") + " count"
-						+ ":" + rs.getInt("count"));
+				/*
+				 * System.out.print("\nstreet_id" + ":" +
+				 * rs.getInt("street_living_id") + " datatype_id" + ":" +
+				 * rs.getInt("datatype_id") + " time_id" + ":" +
+				 * rs.getInt("time_id") + " count" + ":" + rs.getInt("count"));
+				 */
 				// loop through countResult to find item w/ that street_id
 				for (int i = 0; i < countResult.size(); i++) {
 					if (countResult.get(i).getStreet_id() == rs
 							.getInt("street_living_id")) {
-						System.out.print("street_id:"+rs.getInt("street_living_id")+" matched!");
+						// System.out.print("street_id:"+rs.getInt("street_living_id")+" matched!");
 						// if found, insert count data at corresponding position
 						// in the Datatype_count Array
 						countResult.get(i).insertDatatype_countAt(
@@ -333,45 +370,11 @@ public class StatsGet extends HttpServlet {
 		return countResult;
 	}
 
-	// private static String queryName(String district_id, String cat_id)
-	// throws SQLException {
-	// PreparedStatement preparedStatement = null;
-	// String result = "";
-	// String selectDistrict = "SELECT * FROM DISTRICT WHERE DISTRICT_ID = ?";
-	// String selectCategory = "SELECT * FROM CATEGORY WHERE CATEGORY_ID = ?";
-	// try {
-	// System.out.println("queryName getDBConnection");
-	// // selectDistrict SQL stetement
-	// preparedStatement = dbConnection.prepareStatement(selectDistrict);
-	// preparedStatement.setInt(1, Integer.parseInt(district_id));
-	// ResultSet rs = preparedStatement.executeQuery();
-	// while (rs.next()) {
-	// String id = rs.getString("DISTRICT_ID");
-	// String name = rs.getString("NAME");
-	// result = id + ":" + name + "\n";
-	// }
-	// System.out.println("queryName read all name");
-	// // selectCategory SQL stetement
-	// preparedStatement = dbConnection.prepareStatement(selectCategory);
-	// preparedStatement.setInt(1, Integer.parseInt(cat_id));
-	// rs = preparedStatement.executeQuery();
-	// while (rs.next()) {
-	// String id = rs.getString("CATEGORY_ID");
-	// String name = rs.getString("NAME");
-	// result += id + ":" + name;
-	// }
-	// } catch (SQLException e) {
-	//
-	// System.out.println(e.getMessage());
-	//
-	// } finally {
-	//
-	// if (preparedStatement != null) {
-	// preparedStatement.close();
-	// }
-	// }
-	// return result;
-	// }
+	public static String removeAccents(String text) {
+		System.out.println(text);
+		return text == null ? null : Normalizer.normalize(text, Form.NFD)
+				.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+	}
 
 	private static Connection getDBConnection(File file) {
 		System.out.println("DB connecting...");
@@ -380,11 +383,9 @@ public class StatsGet extends HttpServlet {
 		try {
 
 			Class.forName(DB_DRIVER);
-			Scanner scanner=new Scanner(file);
-			
-			dbConnection = DriverManager.getConnection(scanner.nextLine(), scanner.nextLine(),
-					scanner.nextLine());
-			scanner.close();
+			Scanner scanner = new Scanner(file);
+			dbConnection = DriverManager.getConnection(scanner.nextLine(),
+					scanner.nextLine(), scanner.nextLine());
 			System.out.println("DB connected!");
 			return dbConnection;
 
