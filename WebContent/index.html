@@ -15,11 +15,8 @@
         <script type="text/javascript" src="js/threejs/TrackballControls.js"></script>
         <script type="text/javascript" src="js/threejs/OrbitControls.js"></script>
         <script type="text/javascript" src="js/threejs/stats.min.js"></script>
-        <script type="text/javascript" src="js/ggapi.js"></script>
-        <!--
 		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwjSVZUk7D3LgeLPHMurDHm5Z-u39IeY0&sensor=false"></script>
-		 -->
-       
+		
         <link rel="stylesheet" type="text/css" href="css/modern.css">
         <link rel="stylesheet" type="text/css" href="css/jquery-ui-1.10.2.custom.css">
         <link href="css/modern-responsive.css" rel="stylesheet">
@@ -194,8 +191,9 @@
             console.log("cube pos :" + coord.x + ":" + coord.y);
              //Get fieldName
             $(document).ready(function () {	
-				$.getJSON("colors.json", function(data) {
-					
+				//TIMER
+				var start = new Date().getTime();
+				$.getJSON("colors.json", function(data) {					
 					strColorsJSON = data; 
 				});
 				// handle responsive layout when resize window
@@ -227,7 +225,6 @@
                     url: "./StatsGet",
                     type: "GET",
                     dataType: "text",
-                    //data:{num1:n1,num2:n2,},
                 }).success(function (data) {
                     <!-- Remove prgress cycle -->
                     $("#container").empty();
@@ -320,8 +317,13 @@
 					draw_tiles();
 					graph();
                     animate();
+					//TIMER
+					var end = new Date().getTime();
+					var time = end - start;
+					console.log('1st load: ' + time);
 					// zoom slider
 					$("#zoom_slider").on("change", function(e, val){
+						start = new Date().getTime();
 						console.log("x"+camera.position.x);
 						console.log("z"+camera.position.z);
 						// which point to zoom 
@@ -384,6 +386,10 @@
 						draw_tiles();
 						graph();
 						animate();
+						//TIMER
+						end = new Date().getTime();
+						time = end - start;
+						console.log('zoom: ' + time);
 					});
 					// "check all" check box
 					 // district check_all
@@ -408,6 +414,8 @@
                     });
 					//datatype_all
 					$("#datatype_all").change(function () {
+							//TIMER
+							start = new Date().getTime();
                             if ($("#datatype_all").is(":not(:checked)")) {
 									console.log("enable datatypes cb");
 									$("input[type='checkbox'][name='time']").attr("disabled", false);
@@ -425,6 +433,10 @@
 						}else{
 							drawStreetGraph();
 						}
+						//TIMER
+						end = new Date().getTime();
+						time = end - start;
+						console.log('datatype: ' + time);
                     });
 					// datatype  cb
 					$("input[type='checkbox'][name='datatype']").change(function () {                       
@@ -455,7 +467,6 @@
 							console.log('You pressed a "enter" key in textbox');	
 							drawStreetGraph(1);	
 						}
- 
 					});
 					$(document).keypress(function(event){
 						var keycode = (event.keyCode ? event.keyCode : event.which);
@@ -463,6 +474,7 @@
 							console.log('You pressed a "enter" key in somewhere');	
 							drawStreetGraph(1);	
 						}
+						
 					});
                 });
             });
@@ -551,12 +563,17 @@
 				}
 			}
             <!--  Three js Script -->
-			function drawStreetGraph(redraw){// redraw = re init tiles or not	
+			function drawStreetGraph(redraw){// redraw = re init tiles or not
+				start = new Date().getTime();
 				if ($("#datatype_all").is(":not(:checked)")) {
 					drawDatatypeStreetGraph(redraw);
 				}else{
 					drawStreetAllGraph(redraw);
 				}
+				//TIMER
+				end = new Date().getTime();
+				time = end - start;
+				console.log('search street: ' + time);
 			}
 			function drawStreetAllGraph(redraw) {// redraw = re init tiles or not
 				console.log("function drawStreetAllGraph():"+$("#streetSearchBox").val());
@@ -969,7 +986,8 @@
 
                         //console.log("district_id:"+jsonObj.districtStats[index].district_id);
                         //console.log("checkbox is:"+$("input[type='checkbox'][value="+jsonObj.districtStats[index].district_id+"]").is(':checked'));
-                        if ($("input[type='checkbox'][value=" + jsonObj.districtStats[index].district_id + "][name='dist']").is(':checked')) {
+                        if ($("input[type='checkbox'][value=" + jsonObj.districtStats[index].district_id + "][name='dist']").is(':checked')
+						&&Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2&&Math.abs(coord.y)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2) {
                             latLngToCoord(jsonObj.districtStats[index].lat, jsonObj.districtStats[index].lng);
                             //console.log(jsonObj.districtStats[index].data);	
                             // random startMultipler
@@ -1034,6 +1052,10 @@
 						}
 					}
 					BAR_HEIGHT_MULTIPLE = (DOME_RADIUS/8)/max_height;
+					console.log("max_height:"+max_height);
+					console.log("BAR_HEIGHT_MULTIPLE:"+BAR_HEIGHT_MULTIPLE);
+					console.log("BAR_WIDTH:"+BAR_WIDTH);
+					console.log("BAR_WIDTH_MULTIPLE:"+BAR_WIDTH_MULTIPLE);
                     //loop thourgh dataTypeStats Item
 					var randomColorSet=randomSet(18);	
 					console.log("randomColorSet:"+randomColorSet);
@@ -1097,7 +1119,7 @@
                         for (var datatype_index = 1; datatype_index <= 4; datatype_index++) {
                             // draw only checked_datatype and checked_district and inside map
                             if ($("input[type='checkbox'][value=" + datatype_index + "][name='datatype']").is(':checked') && $("input[type='checkbox'][value=" + jsonObj.dataTypeStats[index - 1].district_id + "][name='dist']").is(':checked')
-							&&Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2) {
+							&&Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2&&Math.abs(coord.y)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2) {
                                 //console.log("curDistrict:"+curDistrict);
                                 //console.log("jsonObj.dataTypeStats[index-1].district_id :"+jsonObj.dataTypeStats[index-1].district_id );
                                 //bar position
@@ -1278,9 +1300,84 @@
                     }
                     break;
                 case 3:
+					var count=0;
                     console.log("drawDatatypeStreetGraph");
                     // draw district graph
                     // draw datatype stats graph
+					
+					//find max value to set HEIGHT_MULTIPLE
+					var max_height=0;					
+					console.log("jsonObj.streetStats.length:"+jsonObj.streetStats.length);
+					for (var index = 0; index < jsonObj.streetStats.length; index++) {
+						latLngToCoord(jsonObj.streetStats[index].lat, jsonObj.streetStats[index].lng);
+						if ((Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2&&Math.abs(coord.y)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2)
+						   &&(max_height<jsonObj.streetStats[index].count+0.1)){
+							max_height=jsonObj.streetStats[index].count+0.1;
+						}
+					}
+					BAR_HEIGHT_MULTIPLE = (DOME_RADIUS/8)/max_height; 
+					
+					/*
+					//loop thourgh dataTypeStats Item
+                    for (var index = 0; index < jsonObj.streetStats.length; index++) {
+                        var countSurveyTXT = 0,
+                            countSurveyIMG = 0,
+                            countSurveyAUD = 0,
+                            countSurveyVID = 0,
+                            curStreet;
+                        countSurveyTXT = 0.1, countSurveyIMG = 0.1, countSurveyAUD = 0.1, countSurveyVID = 0.1, curStreet = jsonObj.streetStats[index].street_id;
+                        var datatypejsonObj = eval(jsonObj.streetStats[index].datatype_count);                
+						
+                        // for each dataType item , loop thourgh each district , count & add to countSurvey
+
+                        for (var i = 0; i < datatypejsonObj.length; i++) {
+                            for (var j = 0; j < datatypejsonObj[0].length; j++) {
+                                // if its time-checkbox is checked , count that data
+                                if ($("input[type='checkbox'][value=" + j + "][name='time']").is(':checked')) { // count only checked_time 
+                                    //console.log("index:"+index);
+                                    //console.log("jsonObj.dataTypeStats[index].datatype:"+jsonObj.dataTypeStats[index].datatype_id);
+                                    //if(jsonObj.dataTypeStats[index].datatype_id==1){
+                                    //	countSurveyTXT++;
+                                    //}
+                                    //console.log("datatypejsonObj[" + i + "][" + j + "].count" + datatypejsonObj[i][j]);
+                                    switch (i) {
+                                    case 0:
+                                        countSurveyTXT += datatypejsonObj[i][j];
+                                        break;
+                                    case 1:
+                                        countSurveyIMG += datatypejsonObj[i][j];
+                                        break;
+                                    case 2:
+                                        countSurveyAUD += datatypejsonObj[i][j];
+                                        break;
+                                    case 3:
+                                        countSurveyVID += datatypejsonObj[i][j];
+                                        break;
+                                    default:
+                                        console.log(datatypejsonObj[i][j]);
+                                        break;
+                                    }
+
+                                }
+                            }
+
+                        }
+						if(max_height<countSurveyTXT){
+							max_height=countSurveyTXT
+						}if(max_height<countSurveyIMG){
+							max_height=countSurveyIMG
+						}if(max_height<countSurveyAUD){
+							max_height=countSurveyAUD
+						}if(max_height<countSurveyVID){
+							max_height=countSurveyVID
+						}
+						
+					}
+					*/
+					console.log("max_height:"+max_height);
+					console.log("BAR_HEIGHT_MULTIPLE:"+BAR_HEIGHT_MULTIPLE);
+					console.log("BAR_WIDTH:"+BAR_WIDTH);
+					console.log("BAR_WIDTH_MULTIPLE:"+BAR_WIDTH_MULTIPLE);
                     //loop thourgh dataTypeStats Item
                     for (var index = 0; index < jsonObj.streetStats.length; index++) {
                         var countSurveyTXT = 0,
@@ -1293,6 +1390,7 @@
                         latLngToCoord(jsonObj.streetStats[index].lat, jsonObj.streetStats[index].lng);
                         // random startMultipler
                         startMultipler = Math.random() * (max - min) + min;
+						
                         // for each dataType item , loop thourgh each district , count & add to countSurvey
 
                         for (var i = 0; i < datatypejsonObj.length; i++) {
@@ -1355,8 +1453,8 @@
 							
                             // draw only checked_datatype & checked_district & inside map
                             if ($("input[type='checkbox'][value=" + datatype_index + "][name='datatype']").is(':checked') && $("input[type='checkbox'][value=" + jsonObj.streetStats[index].district_id + "][name='dist']").is(':checked')
-							&&Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2&&Math.abs(coord.y)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2) {
-								
+							&&(Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2)&&(Math.abs(coord.y)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2)) {
+								count++;
                                 //console.log("jsonObj.streetStats[index-1].district_id :"+jsonObj.streetStats[index].district_id );
                                 //bar position
 								
@@ -1425,7 +1523,6 @@
                                         y: countSurveyIMG * BAR_HEIGHT_MULTIPLE * startMultipler,
                                         mesh: cube
                                     };
-
                                     var updateCallback = function () {
                                         this.mesh.scale.y = this.y;
                                         this.mesh.position.y = this.mesh.scale.y / 2;
@@ -1526,12 +1623,22 @@
                                     //console.log("countSurvey:" + countSurveyTXT + ":" + countSurveyIMG + ":" + countSurveyAUD + ":" + countSurveyVID);
                                     break;
                                 }
-                            }
+                            }else{
+							/*
+								var temp_bool = $("input[type='checkbox'][value=" + datatype_index + "][name='datatype']").is(':checked');
+								console.log("cb datatype "+datatype_index+"is: "+ temp_bool );
+								temp_bool = $("input[type='checkbox'][value=" + jsonObj.streetStats[index].district_id + "][name='dist']").is(':checked');
+								console.log("cb district "+jsonObj.streetStats[index].district_id+"is: "+ temp_bool );
+								console.log("x:y  "+coord.x+":"+coord.y);
+								*/
+							}
 
                         }                   
                     }
+					console.log("cube count:"+count);
                     break;
                 case 4:
+				var count=0;
                     console.log("drawStreetAllGraph");
 					
                     //console.log(jsonObj.streetStats[jsonObj.streetStats.length-1].datatype_count[jsonObj.streetStats[jsonObj.streetStats.length-1].datatype_count.length-1]);
@@ -1550,9 +1657,9 @@
 					BAR_HEIGHT_MULTIPLE = (DOME_RADIUS/8)/max_height;
 					console.log("max_height:"+max_height);
 					console.log("BAR_HEIGHT_MULTIPLE:"+BAR_HEIGHT_MULTIPLE);
-					//loop through Stats Item to draw
-					var randomColorSet=randomSet(jsonObj.streetStats.length);		
-					console.log("randomColorSet:"+randomColorSet);
+					console.log("BAR_WIDTH:"+BAR_WIDTH);
+					console.log("BAR_WIDTH_MULTIPLE:"+BAR_WIDTH_MULTIPLE);
+					//loop through Stats Item to draw					
                     for (var index = 0; index < jsonObj.streetStats.length; index++) {
 
                         //console.log("district_id:"+jsonObj.streetStats[index].district_id);
@@ -1561,20 +1668,23 @@
 						latLngToCoord(jsonObj.streetStats[index].lat, jsonObj.streetStats[index].lng);
 						if ($("input[type='checkbox'][value=" + jsonObj.streetStats[index].district_id + "][name='dist']").is(':checked')
 						&&Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2&&Math.abs(coord.y)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2) {                            
-                            //console.log(jsonObj.streetStats[index].data);	
+                            count++;
+							//console.log(jsonObj.streetStats[index].data);	
                             // random startMultipler
                             startMultipler = Math.random() * (max - min) + min;
                             var geometry = new THREE.CubeGeometry(1, 1, 1);			
 									
 							//console.log("BAR_WIDTH"+BAR_WIDTH);
+							// create material color based on average
+						    var scale = ( jsonObj.streetStats[index].count / max_height ) * 255;
+						    var mathColor = gradient(Math.round(scale),255);
                             for (var i = 0; i < geometry.faces.length; i++) {
-                                geometry.faces[i].color.setHex(Math.random()*0xffffff);
-                            }
-
-                            var material = new THREE.MeshLambertMaterial({
-                                vertexColors: THREE.FaceColors
-                            });
-                            var cube = new THREE.Mesh(geometry, material);
+								geometry.faces[i].color.setHex(mathColor);
+							}
+							var material = new THREE.MeshLambertMaterial({
+								vertexColors: THREE.FaceColors
+							});
+							var cube = new THREE.Mesh(geometry, material);
                             cube.scale.x = BAR_WIDTH;
                             cube.scale.y = (jsonObj.streetStats[index].count + 0.1) * BAR_HEIGHT_MULTIPLE * startMultipler;
                             cube.scale.z = BAR_WIDTH;
@@ -1604,8 +1714,10 @@
                                 .start();
                             group_cube.push(cube);
                             scene.add(cube);
-                        }
+                        }else{
+						}
                     }
+					console.log("cube count:"+count);
                     break;
 				default:
                     break;
@@ -1879,44 +1991,25 @@
 					this.remove(child);
 				};
 			};
-    
+			
+			 function gradient(length, maxLength) {
+ 
+            var i = (length * 255 / maxLength);
+            var r = i;
+            var g = (255-(i));
+            var b = 50;
+ 
+            var rgb = "0x"+toHex(r)+toHex(g)+toHex(b);
+            return rgb;
+        }
+		function toHex(n) {
+		 n = parseInt(n,10);
+		 if (isNaN(n)) return "00";
+		 n = Math.max(0,Math.min(n,255));
+		 return "0123456789ABCDEF".charAt((n-n%16)/16)
+			  + "0123456789ABCDEF".charAt(n%16);
+		}
         </script>
-		<!--Shader-->
-		<script type="x-shader/x-vertex" id="vertexShader">
-
-			varying vec3 vWorldPosition;
-
-			void main() {
-
-				vec4 worldPosition = modelMatrix * vec4( position, 1.0 );
-				vWorldPosition = worldPosition.xyz;
-
-				gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );
-
-			}
-
-		</script>
-
-		<script type="x-shader/x-fragment" id="fragmentShader">
-
-			uniform vec3 topColor;
-			uniform vec3 bottomColor;
-			uniform float offset;
-			uniform float exponent;
-
-			varying vec3 vWorldPosition;
-
-			void main() {
-
-				float h = normalize( vWorldPosition + offset ).y;
-				gl_FragColor = vec4( mix( bottomColor, topColor, max( pow( h, exponent ), 0.0 ) ), 1.0 );
-
-			}
-
-		</script>
-		  <script type="text/javascript">
-	
-</script>
     </body>
 
 </html>
