@@ -6,23 +6,23 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <link href="css/modern-responsive.css" rel="stylesheet">
         <title>3D visualization Web data statistics</title>
-           
-        <script type="text/javascript" src="js/threejs/three.js"></script>
-		
+		<!-- js -->
+		<script type="text/javascript" src="js/ColorUtils.js"></script>
+		 <!-- three js lib -->
+        <script type="text/javascript" src="js/threejs/three.js"></script>		
 		<script type="text/javascript" src="js/csg.js"></script>    
-		<script type="text/javascript" src="js/ThreeCSG.js"></script> 		
         <script type="text/javascript" src="js/threejs/Detector.js"></script>
         <script type="text/javascript" src="js/threejs/TrackballControls.js"></script>
         <script type="text/javascript" src="js/threejs/OrbitControls.js"></script>
         <script type="text/javascript" src="js/threejs/stats.min.js"></script>
-		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwjSVZUk7D3LgeLPHMurDHm5Z-u39IeY0&sensor=false"></script>
-		
-        <link rel="stylesheet" type="text/css" href="css/modern.css">
-        <link rel="stylesheet" type="text/css" href="css/jquery-ui-1.10.2.custom.css">
-        <link href="css/modern-responsive.css" rel="stylesheet">
+		<!-- google map -->
+		<script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDwjSVZUk7D3LgeLPHMurDHm5Z-u39IeY0&sensor=false"></script> 
+        <!-- tweening lib -->
         <script type='text/javascript' src='js/tween.min.js'></script>
+		<!-- jquery  lib -->
         <script type="text/javascript" src="js/jquery-1.9.1.min.js"></script>
         <script type="text/javascript" src="js/jquery-ui-1.10.2.custom.js"></script>
+		<link rel="stylesheet" type="text/css" href="css/jquery-ui-1.10.2.custom.css">
 		<!-- modern ui lib -->
         <script type="text/javascript" src="js/metroui/accordion.js"></script>
         <script type="text/javascript" src="js/metroui/buttonset.js"></script>
@@ -36,12 +36,11 @@
         <script type="text/javascript" src="js/metroui/pagecontrol.js"></script>
         <script type="text/javascript" src="js/metroui/tile-drag.js"></script>
         <script type="text/javascript" src="js/metroui/tile-slider.js"></script>
-		<!--  css -->
-        <!-- <link rel="stylesheet" type="text/css" href="css/modern-responsive.css"> -->
-        <!-- <link rel="stylesheet" type="text/css" href="css/theme-dark.css"> -->
-        <!-- typehead (search street)-->
+		<link rel="stylesheet" type="text/css" href="css/modern.css">
+		<link href="css/modern-responsive.css" rel="stylesheet">
+		<!-- typehead (search street)-->
         <link href="css/typeahead.css" rel="stylesheet">
-        <script type="text/javascript" src="js/typeahead.js"></script>     
+        <script type="text/javascript" src="js/typeahead.js"></script>    
 		<style>
 		.ui - autocomplete {
 			max - height: 100px;
@@ -121,6 +120,7 @@
         <!-- form jquery -->
         <script type="text/javascript">
 			// street name list for search
+			var ColorUtils = new ColorUtils();
 			var streetListSearch = [];
 			// colors for graph
 			var strColorsJSON ;
@@ -980,7 +980,7 @@
 					console.log("BAR_WIDTH:"+BAR_WIDTH);
 					console.log("BAR_WIDTH_MULTIPLE:"+BAR_WIDTH_MULTIPLE);
 					//loop through Stats Item to draw
-					var randomColorSet=randomSet(jsonObj.districtStats.length);			
+					var randomColorSet=ColorUtils.randomSet(jsonObj.districtStats.length);			
 					console.log("randomColorSet:"+randomColorSet);
                     for (var index = 0; index < jsonObj.districtStats.length; index++) {
 
@@ -1057,7 +1057,7 @@
 					console.log("BAR_WIDTH:"+BAR_WIDTH);
 					console.log("BAR_WIDTH_MULTIPLE:"+BAR_WIDTH_MULTIPLE);
                     //loop thourgh dataTypeStats Item
-					var randomColorSet=randomSet(18);	
+					var randomColorSet=ColorUtils.randomSet(18);	
 					console.log("randomColorSet:"+randomColorSet);
                     for (var index = 0; index < jsonObj.dataTypeStats.length; index++) {
                         countSurveyTXT = 0.1, countSurveyIMG = 0.1, countSurveyAUD = 0.1, countSurveyVID = 0.1, curDistrict = jsonObj.dataTypeStats[index].district_id;
@@ -1430,7 +1430,7 @@
 						//console.log("countSurveyIMG"+countSurveyIMG);
 						//console.log("countSurveyAUD"+countSurveyAUD);
 						//console.log("countSurveyVID"+countSurveyVID);
-						//var randomColorSet=randomSet(jsonObj.districtStats.length);	
+						//var randomColorSet=ColorUtils.randomSet(jsonObj.districtStats.length);	
 						//draw base of graph
 						if (Math.abs(coord.x)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2&&Math.abs(coord.y)<STATIC_MAP_HEIGHT*TILE_MULTIPLE/2) {
 							plane = new THREE.Mesh(new THREE.CubeGeometry( BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE * 6,BAR_WIDTH_DATATYPE * BAR_WIDTH_MULTIPLE * 6 , 1, 1), new THREE.MeshLambertMaterial({
@@ -1677,7 +1677,7 @@
 							//console.log("BAR_WIDTH"+BAR_WIDTH);
 							// create material color based on average
 						    var scale = ( jsonObj.streetStats[index].count / max_height ) * 255;
-						    var mathColor = gradient(Math.round(scale),255);
+						    var mathColor = ColorUtils.gradient(Math.round(scale),255);
                             for (var i = 0; i < geometry.faces.length; i++) {
 								geometry.faces[i].color.setHex(mathColor);
 							}
