@@ -53,13 +53,9 @@ public class StatsGet extends HttpServlet {
 	 */
 	public StatsGet() {
 		super();
-		// TODO Auto-generated constructor stub
 	}
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse
-	 *      response)
-	 */
+	
 	protected void doGet(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException, IOException {
 		this.file = new File(this.getServletContext().getRealPath("/")
@@ -371,9 +367,11 @@ public class StatsGet extends HttpServlet {
 	}
 
 	public static String removeAccents(String text) {
-		System.out.println(text);
-		return text == null ? null : Normalizer.normalize(text, Form.NFD)
-				.replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+		System.out.println(text);	
+		String output = text.replace('đ', 'd');
+		output = text.replace('Đ', 'D');
+		return Normalizer.normalize(output, Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+		
 	}
 
 	private static Connection getDBConnection(File file) {
@@ -387,6 +385,7 @@ public class StatsGet extends HttpServlet {
 			dbConnection = DriverManager.getConnection(scanner.nextLine(),
 					scanner.nextLine(), scanner.nextLine());
 			System.out.println("DB connected!");
+			scanner.close();
 			return dbConnection;
 
 		} catch (ClassNotFoundException e) {

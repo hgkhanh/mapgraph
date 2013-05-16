@@ -1,4 +1,4 @@
-function ColorUtils() {
+function GraphUtils() {
     this.colorList = [
 	
 	 "0xEB8787",
@@ -23,18 +23,18 @@ function ColorUtils() {
 	
 	];
 }
-ColorUtils.prototype.gradient=function (length, maxLength) {
+GraphUtils.prototype.gradient=function (length, maxLength) {
 
 	var i = (length * 255 / maxLength);
 	var r = i;
 	var g = (255-(i));
 	var b = 50;
 
-	var rgb = "0x"+toHex(r)+toHex(g)+toHex(b);
+	var rgb = "0x"+this.toHex(r)+this.toHex(g)+this.toHex(b);
 	return rgb;
 };
 
-ColorUtils.prototype.toHex=function(n) {
+GraphUtils.prototype.toHex=function(n) {
  n = parseInt(n,10);
  if (isNaN(n)) return "00";
  n = Math.max(0,Math.min(n,255));
@@ -42,19 +42,19 @@ ColorUtils.prototype.toHex=function(n) {
 	  + "0123456789ABCDEF".charAt(n%16);
 };
 
-ColorUtils.prototype.ArrayShuffle=function() {
+GraphUtils.prototype.ArrayShuffle=function() {
 	  var d,
 	  c,
 	  b = this.colorList.length;
 	   while (b) {
 		c = Math.floor(Math.random() * b);
-		d = colorList[--b];
-		colorList[b] = colorList[c];
-		colorList[c] = d
+		d = this.colorList[--b];
+		this.colorList[b] = this.colorList[c];
+		this.colorList[c] = d
 	   }
-	   return colorList;
+	   return this.colorList;
 };
-ColorUtils.prototype.randomSet=function(setLength) {				
+GraphUtils.prototype.randomSet=function(setLength) {				
 	//console.log(strColorsJSON);
 	var jsonObject = strColorsJSON;
 	var colorsSet = [];
@@ -63,7 +63,7 @@ ColorUtils.prototype.randomSet=function(setLength) {
 	}	
 	var resultSet=[];				
 	//shuffle array 'colorsSet' then select the first 'setLength' items
-	ArrayShuffle(colorsSet);
+	this.ArrayShuffle(colorsSet);
 	//console.log("shuffle:"+colorsSet);
 	for(var index=0;index<setLength;index++){
 		resultSet.push(colorsSet[index]);
