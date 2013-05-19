@@ -67,7 +67,7 @@
        
 		<div id="ControlPanel" style="width: 30%; z-index: 200;position: absolute;background-color: rgba(255,255,255,0.5);right: 0;top: 0;">
 			<div id="zoom_place_holder" style="position: relative;margin:10px;">
-					<a href="#" onClick="centerCamera()"> Zoom : </a><a href="#" id="zoom_slider_text">13</a>
+					<a href="#" onClick="resetCamera()"> Zoom : </a><a href="#" id="zoom_slider_text">13</a>
 					<div id='zoom_slider' class='slider' data-role='slider' data-param-init-value='20'data-param-accuracy='20'></div>
 			</div>
 			<ul class="accordion" data-role="accordion" style="position: relative;margin:10px">
@@ -82,8 +82,7 @@
 							<div id="streetSearchBoxDiv" class="input-control text">
 								<input id="streetSearchBox"type="text"/>
 								<button class="btn-search" tabindex="-1" type="button" onClick="drawStreetGraph(1)"></button>					
-							</div>
-						
+							</div>						
 						</div>
 					</div>
 					<div id="dataFormContainer" style="-moz-column-count: 3; -webkit-column-count: 3; column-count: 3;">						

@@ -141,7 +141,6 @@ public class StatsGet extends HttpServlet {
 				+ "GROUP BY answer.district_living_id,answer_datatype_time.datatype_id,"
 				+ "answer_datatype_time.time_id;";
 		try {
-			dbConnection = getDBConnection(file);
 			System.out.println("query datatype stats");
 			preparedStatement = dbConnection
 					.prepareStatement(selectDatatypeStats);
@@ -174,7 +173,6 @@ public class StatsGet extends HttpServlet {
 		String selectDatatype = "SELECT * FROM datatype";
 		String selectTime = "SELECT * FROM time";
 		try {
-			dbConnection = getDBConnection(file);
 			System.out.println("query District Name");
 			// selectDistrict SQL stetement
 			preparedStatement = dbConnection.prepareStatement(selectDistrict);

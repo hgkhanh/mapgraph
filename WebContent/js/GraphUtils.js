@@ -50,7 +50,7 @@ GraphUtils.prototype.ArrayShuffle=function() {
 		c = Math.floor(Math.random() * b);
 		d = this.colorList[--b];
 		this.colorList[b] = this.colorList[c];
-		this.colorList[c] = d
+		this.colorList[c] = d;
 	   }
 	   return this.colorList;
 };
