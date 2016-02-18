@@ -3,7 +3,7 @@ Internet usage of Hanoi visualizing in 3D using WebGL
 
 ## Include
 * three.js for 3D visulization
-* Back-end with Java
+* Back-end with Java Servlet
 * Metro UI CSS for Front Page Styling
 
 ## Installation
